@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rt:BOOT MANAGER OS profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "name", "tier", "status", "devices", "release", "boot", "requirements"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,31}$" },
+    "name": { "type": "string", "minLength": 2 },
+    "tier": { "enum": ["main", "additional", "research"] },
+    "status": { "enum": ["supported_upstream", "legacy_upstream", "research_required", "disabled"] },
+    "devices": { "type": "array", "minItems": 1, "items": { "type": "string" }, "uniqueItems": true },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "policy", "source", "version_pin_allowed"],
+      "properties": {
+        "channel": { "enum": ["stable", "legacy", "manual"] },
+        "policy": { "enum": ["follow_latest_compatible", "pinned", "manual"] },
+        "known_version": { "type": ["string", "null"] },
+        "known_version_date": { "type": ["string", "null"], "format": "date" },
+        "source": { "type": "string", "format": "uri" },
+        "version_pin_allowed": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "boot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "adapter", "kernel_model", "artifacts", "write_capable"],
+      "properties": {
+        "mode": { "enum": ["native_firmware", "uboot_profile", "muos_user_init", "stock_dmenu_handoff", "shared_kernel_rootfs", "legacy_rootfs", "unknown"] },
+        "adapter": { "type": "string" },
+        "kernel_model": { "enum": ["own_kernel", "host_kernel", "legacy_launcher", "unknown"] },
+        "artifacts": { "type": "array", "items": { "type": "string" } },
+        "requires_dtb": { "type": "boolean" },
+        "requires_known_ram": { "type": "boolean" },
+        "write_capable": { "const": false }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["board", "ram", "panel", "minimum_free_bytes"],
+      "properties": {
+        "board": { "type": "array", "items": { "type": "string" } },
+        "ram": { "type": "array", "items": { "enum": ["ddr3", "ddr4", "unknown"] } },
+        "panel": { "type": "array", "items": { "type": "string" } },
+        "minimum_free_bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  }
+}
