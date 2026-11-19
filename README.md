@@ -14,6 +14,8 @@ The project aims to manage verified operating-system images, version-pinned rele
 
 ## Project principles
 
+See [the phased roadmap](docs/ROADMAP.md) for implementation milestones and the hardware-validation gates.
+
 1. **Preserve the stock boot chain.** No Boot0, boot-package, U-Boot, environment or partition writes without a verified backup, explicit confirmation and a tested restore path.
 2. **Detect before selecting.** Board revision, RAM variant, panel DTB, storage layout and image requirements must match before an OS is offered as bootable.
 3. **Pin or follow.** Each OS can follow its latest compatible stable release or remain pinned to a specific older version.
