@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "os_id": "rocknix",
+  "tag": "20261101",
+  "channel": "stable",
+  "published_at": "2026-11-01",
+  "source": "https://github.com/ROCKNIX/distribution/releases",
+  "device_family": "allwinner-h700",
+  "device": "anbernic-rg35xx-h",
+  "assets": [
+    {
+      "filename": "ROCKNIX-H700.aarch64-20261101-DDR3.img.gz",
+      "ram_variant": "ddr3",
+      "size_display": "1.18 GB",
+      "sha256": "6c5567f5e29a041a1ae1a94c3737c640f5345b77fbaffa4010e8e8ebc6546af1"
+    },
+    {
+      "filename": "ROCKNIX-H700.aarch64-20261101-DDR4.img.gz",
+      "ram_variant": "ddr4",
+      "size_display": "1.18 GB",
+      "sha256": "46ec25c30be24fff5f154460f988e53c0311e115fd72ee7b861b55e59c553a07"
+    }
+  ],
+  "dtb": {
+    "source_directory": "device_trees",
+    "destination_filename": "dtb.img",
+    "board_variants": {
+      "rg35xx-h": "sun50i-h700-anbernic-rg35xx-h.dtb",
+      "rg35xx-h-rev6": "sun50i-h700-anbernic-rg35xx-h-rev6-panel.dtb"
+    },
+    "warning": "The correct PCB/panel DTB must be established before boot. If the panel renders incorrectly, power off and reflash/restore rather than continuing blind."
+  },
+  "installation_model": "full_image",
+  "version_policy": {
+    "follow_latest_compatible": true,
+    "allow_pinning_older": true
+  },
+  "validation": {
+    "checksum_algorithm": "sha256",
+    "checksum_required": true,
+    "device_match_required": true,
+    "ram_variant_required": true,
+    "dtb_match_required": true
+  }
+}
