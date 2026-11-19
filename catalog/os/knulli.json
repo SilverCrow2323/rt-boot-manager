@@ -10,7 +10,7 @@
     "policy": "follow_latest_compatible",
     "known_version": "Scarab 20260511",
     "known_version_date": "2026-05-11",
-    "source": "https://github.com/knulli/knulli-linux/releases",
+    "source": "https://github.com/knulli-cfw/knulli-linux/releases",
     "version_pin_allowed": true,
     "notes": "Known RG35XX H / H700 release snapshot. Resolver must verify release assets and hardware metadata."
   },
