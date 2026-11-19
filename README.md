@@ -46,7 +46,7 @@ A separate **rootfs/chroot adapter** may support environments that share the cur
 │   └── SAFETY_AND_RECOVERY.md
 ├── schema/
 │   └── os-profile.schema.json
-├── src/rtbm/               # Read-only profile and device logic
+├── src/rtbm/               # Read-only profile, device, planner and SGRUB state
 ├── tests/                  # Host-side contract tests
 ├── tools/
 │   └── rtbm.py             # Read-only CLI
