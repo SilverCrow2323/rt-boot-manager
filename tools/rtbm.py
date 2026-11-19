@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from rtbm.catalog import CatalogError, get_profile, load_profiles, profile_summary  # noqa: E402
 from rtbm.device import probe_device  # noqa: E402
 from rtbm.planner import make_plan  # noqa: E402
+from rtbm.releases import load_release_manifests  # noqa: E402
 
 
 def output(value: object) -> None:
@@ -33,7 +34,14 @@ def command_probe(args: argparse.Namespace) -> int:
 
 def command_validate(_args: argparse.Namespace) -> int:
     profiles = load_profiles()
-    output({"valid": True, "count": len(profiles), "ids": [item["id"] for item in profiles]})
+    releases = load_release_manifests()
+    output({
+        "valid": True,
+        "profile_count": len(profiles),
+        "profile_ids": [item["id"] for item in profiles],
+        "release_count": len(releases),
+        "releases": [f'{item["os_id"]}:{item["tag"]}' for item in releases],
+    })
     return 0
 
 
