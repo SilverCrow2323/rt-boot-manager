@@ -50,7 +50,8 @@ class SgrubState:
         ]
         if not self.entries:
             raise ValueError("SGRUB needs at least one visible profile")
-        self.default_profile = default_profile if default_profile in by_id else self.entries[0].profile_id
+        visible_ids = {entry.profile_id for entry in self.entries}
+        self.default_profile = default_profile if default_profile in visible_ids else self.entries[0].profile_id
         self.selected_index = next(
             (i for i, entry in enumerate(self.entries) if entry.profile_id == self.default_profile),
             0,
