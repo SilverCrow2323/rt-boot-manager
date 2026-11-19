@@ -8,8 +8,8 @@
   "release": {
     "channel": "stable",
     "policy": "follow_latest_compatible",
-    "known_version": "2.0.2",
-    "known_version_date": "2026-05-04",
+    "known_version": "v2.0.1",
+    "known_version_date": null,
     "source": "https://github.com/GarlicOS/buildroot/releases",
     "version_pin_allowed": true,
     "notes": "Rootfs release must be paired with its matching init template."
