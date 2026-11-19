@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-core:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate OS profile catalogue
+        run: python3 tools/rtbm.py validate
+      - name: Run unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Exercise CLI
+        run: |
+          python3 tools/rtbm.py list
+          python3 tools/rtbm.py probe --root /
+          python3 tools/rtbm.py plan rocknix --device anbernic-rg35xx-h --ram unknown --panel unknown --dry-run
+      - name: Validate muOS hook syntax
+        run: sh -n integrations/muos/99-rtbm-sgrub.sh
+      - name: Assert no write-capable profile
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('catalog/os').glob('*.json'):
+              profile = json.loads(path.read_text())
+              assert profile['boot']['write_capable'] is False, path
+          PY
