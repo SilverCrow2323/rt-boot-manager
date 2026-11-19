@@ -29,6 +29,11 @@ class SgrubStateTests(unittest.TestCase):
         selected = self.state.tick(5)
         self.assertEqual(selected, "muos")
 
+    def test_disabled_profile_cannot_become_default(self):
+        state = SgrubState(load_profiles(ROOT / "catalog" / "os"),
+                           default_profile="minos", timeout_seconds=1)
+        self.assertEqual(state.tick(1), "muos")
+
     def test_confirm_returns_selected_profile(self):
         self.state.move(1)
         self.assertEqual(self.state.handle("a"), "rocknix")
