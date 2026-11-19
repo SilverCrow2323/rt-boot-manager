@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "minos",
+  "name": "MinOS (unverified identity)",
+  "tier": "research",
+  "status": "disabled",
+  "devices": ["unknown"],
+  "release": {
+    "channel": "manual",
+    "policy": "manual",
+    "known_version": null,
+    "known_version_date": null,
+    "source": "https://github.com",
+    "version_pin_allowed": false,
+    "notes": "No distinct MinOS project and supported RG35XX H boot artefact have been verified."
+  },
+  "boot": {
+    "mode": "unknown",
+    "adapter": "unassigned",
+    "kernel_model": "unknown",
+    "artifacts": [],
+    "requires_dtb": false,
+    "requires_known_ram": false,
+    "write_capable": false
+  },
+  "requirements": {
+    "board": [],
+    "ram": ["unknown"],
+    "panel": [],
+    "minimum_free_bytes": 0
+  },
+  "dependencies": [],
+  "warnings": ["Research metadata only. Must never be shown as bootable."]
+}
