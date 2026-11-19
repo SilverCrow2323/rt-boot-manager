@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "os_id": "knulli",
+  "tag": "20260511",
+  "channel": "stable",
+  "name": "KNULLI Scarab",
+  "published_at": "2026-05-11",
+  "source": "https://github.com/knulli-cfw/knulli-linux/releases/tag/20260511",
+  "device_family": "allwinner-h700",
+  "device": "anbernic-rg35xx-h",
+  "asset": {
+    "filename": "knulli-h700-rg35xx-h-scarab-20260511.img.gz",
+    "format": "img.gz",
+    "sha256": null,
+    "sha256_policy": "calculate_on_download_and_store_local_verification"
+  },
+  "boot_artifacts": [
+    "Boot0",
+    "boot-package",
+    "boot.img",
+    "env.img",
+    "device-specific DTB"
+  ],
+  "hardware_notes": [
+    "Scarab release adds support for revised H700 devices in the Anbernic RG XX line.",
+    "Do not borrow Boot0, boot-package or env.img from a different KNULLI device image."
+  ],
+  "installation_model": "full_image",
+  "version_policy": {
+    "follow_latest_compatible": true,
+    "allow_pinning_older": true
+  },
+  "validation": {
+    "checksum_required": true,
+    "device_match_required": true,
+    "boot_artifact_set_required": true
+  }
+}
