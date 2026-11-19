@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "rocknix",
+  "name": "ROCKNIX",
+  "tier": "main",
+  "status": "supported_upstream",
+  "devices": ["anbernic-rg35xx-h"],
+  "release": {
+    "channel": "stable",
+    "policy": "follow_latest_compatible",
+    "known_version": "20261101",
+    "known_version_date": "2026-11-01",
+    "source": "https://github.com/ROCKNIX/distribution/releases",
+    "version_pin_allowed": true,
+    "notes": "Resolve the RG35XX H H700 release asset, RAM variant and DTB before presenting an update."
+  },
+  "boot": {
+    "mode": "uboot_profile",
+    "adapter": "rocknix-h700-native",
+    "kernel_model": "own_kernel",
+    "artifacts": ["ROCKNIX H700 image", "device-specific DTB", "boot partition metadata"],
+    "requires_dtb": true,
+    "requires_known_ram": true,
+    "write_capable": false
+  },
+  "requirements": {
+    "board": ["rg35xx-h"],
+    "ram": ["ddr3", "ddr4"],
+    "panel": ["rg35xx-h", "rg35xx-h-rev6"],
+    "minimum_free_bytes": 0
+  },
+  "dependencies": [],
+  "warnings": ["RG35XX H and rev6-panel use different DTB files. RAM variant and image asset must be established; product name alone is not enough."]
+}
