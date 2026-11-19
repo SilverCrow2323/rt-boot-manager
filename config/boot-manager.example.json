@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "default_profile": "muos",
+  "timeout_seconds": 8,
+  "release_policy": "follow_latest_compatible",
+  "sgrub_autostart": false,
+  "safe_mode": true,
+  "allow_bootloader_writes": false,
+  "profiles": {
+    "muos": {"enabled": true, "version_policy": "follow_latest_compatible"},
+    "rocknix": {"enabled": true, "version_policy": "follow_latest_compatible"},
+    "knulli": {"enabled": true, "version_policy": "follow_latest_compatible"},
+    "stock-os": {"enabled": true, "version_policy": "pinned"},
+    "stock-os-mod": {"enabled": false, "version_policy": "follow_latest_compatible"},
+    "garlicos": {"enabled": false, "version_policy": "follow_latest_compatible"},
+    "minui": {"enabled": false, "version_policy": "pinned"},
+    "minos": {"enabled": false, "version_policy": "manual"}
+  }
+}
