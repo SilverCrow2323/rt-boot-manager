@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "stock-os",
+  "name": "Anbernic Stock OS",
+  "tier": "additional",
+  "status": "supported_upstream",
+  "devices": ["anbernic-rg35xx-h"],
+  "release": {
+    "channel": "stable",
+    "policy": "follow_latest_compatible",
+    "known_version": "V1.2.4-260526",
+    "known_version_date": "2026-05-26",
+    "source": "https://win.anbernic.com/download/360.html",
+    "version_pin_allowed": true,
+    "notes": "Keep a known-good stock image and its boot components as the recovery reference."
+  },
+  "boot": {
+    "mode": "native_firmware",
+    "adapter": "anbernic-stock",
+    "kernel_model": "own_kernel",
+    "artifacts": ["Stock OS image", "vendor boot components"],
+    "requires_dtb": true,
+    "requires_known_ram": false,
+    "write_capable": false
+  },
+  "requirements": {
+    "board": ["rg35xx-h"],
+    "ram": ["ddr3", "ddr4", "unknown"],
+    "panel": ["rg35xx-h", "rg35xx-h-rev6"],
+    "minimum_free_bytes": 0
+  },
+  "dependencies": [],
+  "warnings": ["Stock firmware is a recovery target, not a generic image interchangeable across H700 devices."]
+}
