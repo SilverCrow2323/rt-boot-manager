@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "minui",
+  "name": "MinUI",
+  "tier": "additional",
+  "status": "legacy_upstream",
+  "devices": ["anbernic-rg35xx-h"],
+  "release": {
+    "channel": "legacy",
+    "policy": "pinned",
+    "known_version": "RG35XX H legacy package (verify exact asset)",
+    "known_version_date": null,
+    "source": "https://github.com/shauninman/MinUI/releases",
+    "version_pin_allowed": true,
+    "notes": "Repository is archived. Do not assume the latest generic release is the RG35XX H-compatible build."
+  },
+  "boot": {
+    "mode": "legacy_rootfs",
+    "adapter": "minui-legacy",
+    "kernel_model": "legacy_launcher",
+    "artifacts": ["device-specific MinUI package", "matching launcher and rootfs"],
+    "requires_dtb": false,
+    "requires_known_ram": false,
+    "write_capable": false
+  },
+  "requirements": {
+    "board": ["rg35xx-h"],
+    "ram": ["ddr3", "ddr4", "unknown"],
+    "panel": ["rg35xx-h", "rg35xx-h-rev6"],
+    "minimum_free_bytes": 0
+  },
+  "dependencies": [],
+  "warnings": ["Legacy launcher/rootfs path; not an independent current H700 kernel firmware."]
+}
