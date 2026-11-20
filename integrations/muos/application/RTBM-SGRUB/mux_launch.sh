@@ -13,4 +13,10 @@ fi
 export SDL_VIDEO_CENTERED=1
 export SDL_RENDER_SCALE_QUALITY=1
 
+# Optional SDL GameController database: users can place a device-verified
+# gamecontrollerdb.txt beside the binary without modifying the launcher.
+if [ -f "$APP_DIR/gamecontrollerdb.txt" ]; then
+    exec "$APP_DIR/sgrub" --fullscreen --mapping-file "$APP_DIR/gamecontrollerdb.txt" "$@"
+fi
+
 exec "$APP_DIR/sgrub" --fullscreen "$@"
