@@ -4,24 +4,24 @@
 
 set -eu
 
-# Use the official muOS application lifecycle: SDL environment, governor,
-# HOME/XDG setup, foreground tracking and clean return to the frontend.
+# Official muOS application lifecycle: CPU governor, HOME/XDG, SDL input
+# mapping, foreground-process tracking and application control profile.
 . /opt/muos/script/var/func.sh
 
 APP_BIN="sgrub"
 SETUP_APP "$APP_BIN" "modern"
 
-# Applications must use the SD1/SD2-neutral runtime bind mount.
-APP_DIR="/run/muos/storage/application/RTBM-SGRUB"
-cd "$APP_DIR"
+# MUOS_STORE_DIR is the SD1/SD2-neutral runtime storage bind mount.
+APP_DIRECTORY="$MUOS_STORE_DIR/application/RTBM-SGRUB"
+cd "$APP_DIRECTORY" || exit 1
 
 export SDL_VIDEO_CENTERED=1
 export SDL_RENDER_SCALE_QUALITY=1
 
-# Optional SDL GameController database: users can place a device-verified
-# gamecontrollerdb.txt beside the binary without modifying the launcher.
-if [ -f "$APP_DIR/gamecontrollerdb.txt" ]; then
-    exec "./$APP_BIN" --fullscreen --mapping-file "$APP_DIR/gamecontrollerdb.txt" "$@"
+# Optional device-verified SDL mapping. The stock muOS mapping remains the
+# default when no per-app override is installed.
+if [ -f "$APP_DIRECTORY/gamecontrollerdb.txt" ]; then
+    "./$APP_BIN" --fullscreen --mapping-file "$APP_DIRECTORY/gamecontrollerdb.txt" "$@"
+else
+    "./$APP_BIN" --fullscreen "$@"
 fi
-
-exec "./$APP_BIN" --fullscreen "$@"
