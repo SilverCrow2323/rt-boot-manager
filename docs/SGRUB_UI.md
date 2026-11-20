@@ -71,7 +71,7 @@ ELF interpreter and required GLIBC symbol versions before deploying it.
 
 After building the binary against the target sysroot:
 
-    tools/package_muos_sgrub.sh
+    sh tools/package_muos_sgrub.sh
 
 The script creates dist/rtbm-sgrub.muxapp. Copy the archive to
 /mnt/mmc/ARCHIVE on the device and install it using muOS Archive Manager.
