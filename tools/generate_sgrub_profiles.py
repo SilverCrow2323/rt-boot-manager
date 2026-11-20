@@ -53,7 +53,8 @@ def render() -> str:
                     c_string(version),
                     c_string(item["status"]),
                     c_string(BOOT_LABELS.get(boot["mode"], "UNKNOWN")),
-                    "true" if boot.get("requires_known_ram") or boot.get("requires_dtb") else "false",
+                    "true" if boot.get("requires_known_ram") else "false",
+                    "true" if boot.get("requires_dtb") else "false",
                 )
             )
             + "},"
