@@ -3,9 +3,9 @@
 #define RTBM_SGRUB_PROFILES_GENERATED_H
 
 static const SgrubProfile SGRUB_PROFILES[] = {
-    {"muos", "muOS", "2606.0 Andromeda", "supported_upstream", "NATIVE FIRMWARE", true},
-    {"rocknix", "ROCKNIX", "20261101", "supported_upstream", "UBOOT PROFILE", true},
-    {"knulli", "KNULLI", "Scarab 20260511", "supported_upstream", "UBOOT PROFILE", true},
+    {"muos", "muOS", "2606.0 Andromeda", "supported_upstream", "NATIVE FIRMWARE", false, true},
+    {"rocknix", "ROCKNIX", "20261101", "supported_upstream", "UBOOT PROFILE", true, true},
+    {"knulli", "KNULLI", "Scarab 20260511", "supported_upstream", "UBOOT PROFILE", true, true},
 };
 #define SGRUB_PROFILE_COUNT (sizeof(SGRUB_PROFILES) / sizeof(SGRUB_PROFILES[0]))
 
