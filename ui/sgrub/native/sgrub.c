@@ -519,9 +519,10 @@ static void usage(const char *program)
 {
     (void)printf(
         "Rt:BOOT MANAGER / SGRUB %s\n"
-        "Usage: %s [--fullscreen] [--input-dump] [--self-test] [--version]\n"
+        "Usage: %s [--fullscreen] [--input-dump] [--mapping-file PATH] [--self-test] [--version]\n"
         "\n"
         "This preview browses profiles only. It does not boot, reboot or write storage.\n"
+        "Optional SDL GameController mappings can be loaded from a text database.\n"
         "Raw joystick button mappings may be supplied with RTBM_RAW_*_BUTTON variables.\n",
         SGRUB_VERSION, program);
 }
@@ -531,6 +532,7 @@ int main(int argc, char **argv)
     bool fullscreen = false;
     bool input_dump = false;
     bool controller_connected;
+    const char *mapping_file = NULL;
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
     SDL_GameController *controller = NULL;
@@ -544,6 +546,12 @@ int main(int argc, char **argv)
             fullscreen = false;
         } else if (strcmp(argv[i], "--input-dump") == 0) {
             input_dump = true;
+        } else if (strcmp(argv[i], "--mapping-file") == 0) {
+            if (i + 1 >= argc) {
+                (void)fprintf(stderr, "SGRUB: --mapping-file requires a path.\n");
+                return 2;
+            }
+            mapping_file = argv[++i];
         } else if (strcmp(argv[i], "--self-test") == 0) {
             (void)printf("SGRUB self-test: %lu profiles\n",
                          (unsigned long)SGRUB_PROFILE_COUNT);
@@ -570,6 +578,18 @@ int main(int argc, char **argv)
                  SDL_INIT_JOYSTICK | SDL_INIT_EVENTS) != 0) {
         (void)fprintf(stderr, "SGRUB: SDL_Init failed: %s\n", SDL_GetError());
         return 1;
+    }
+
+    if (mapping_file) {
+        int mappings_added = SDL_GameControllerAddMappingsFromFile(mapping_file);
+        if (mappings_added < 0) {
+            (void)fprintf(stderr, "SGRUB: cannot load controller mapping %s: %s\n",
+                          mapping_file, SDL_GetError());
+        } else {
+            (void)printf("SGRUB_INPUT mappings_loaded=%d file=%s\n",
+                         mappings_added, mapping_file);
+            (void)fflush(stdout);
+        }
     }
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
