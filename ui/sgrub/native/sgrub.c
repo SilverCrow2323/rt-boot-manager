@@ -206,7 +206,7 @@ static void draw_header(SDL_Renderer *renderer)
 {
     rect(renderer, 28, 23, 42, 42, C_ACCENT);
     draw_text(renderer, 34, 35, "RT", 2, C_BG);
-    draw_text(renderer, 84, 24, "RT BOOT MANAGER", 2, C_TEXT);
+    draw_text(renderer, 84, 24, "RT:BOOT MANAGER", 2, C_TEXT);
     draw_text(renderer, 84, 52, "SPDW FACTORY / SGRUB", 1, C_MUTED);
     draw_chip(renderer, 448, 27, 164, "H700 / PREVIEW", C_PANEL_HI, C_CYAN);
     hline(renderer, 28, 612, 82, C_LINE);
@@ -466,7 +466,7 @@ static void dump_joystick_info(SDL_Joystick *joystick, const char *kind)
     }
     SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(joystick),
                               guid_text, (int)sizeof(guid_text));
-    (void)printf("SGRUB_INPUT kind=%s name=%s guid=%s buttons=%d hats=%d axes=%d\\n",
+    (void)printf("SGRUB_INPUT kind=%s name=%s guid=%s buttons=%d hats=%d axes=%d\n",
                  kind,
                  SDL_JoystickName(joystick) ? SDL_JoystickName(joystick) : "unknown",
                  guid_text,
@@ -487,7 +487,7 @@ static void dump_controller_mapping(SDL_GameController *controller)
     dump_joystick_info(joystick, "gamecontroller");
     mapping = SDL_GameControllerMapping(controller);
     if (mapping) {
-        (void)printf("SGRUB_INPUT mapping=%s\\n", mapping);
+        (void)printf("SGRUB_INPUT mapping=%s\n", mapping);
         SDL_free(mapping);
     }
     (void)fflush(stdout);
@@ -498,7 +498,7 @@ static void handle_controller_button(UiState *state, Uint8 button)
     if (state->input_dump) {
         (void)snprintf(state->last_input, sizeof(state->last_input), "PAD BTN %u",
                        (unsigned int)button);
-        (void)printf("SGRUB_INPUT controller_button=%u\\n", (unsigned int)button);
+        (void)printf("SGRUB_INPUT controller_button=%u\n", (unsigned int)button);
         (void)fflush(stdout);
     }
     switch (button) {
@@ -613,7 +613,7 @@ int main(int argc, char **argv)
         } else if (raw_joystick) {
             dump_joystick_info(raw_joystick, "raw");
         } else {
-            (void)printf("SGRUB_INPUT no_controller_detected\\n");
+            (void)printf("SGRUB_INPUT no_controller_detected\n");
             (void)fflush(stdout);
         }
     }
@@ -669,7 +669,7 @@ int main(int argc, char **argv)
             case SDL_JOYHATMOTION:
                 if (!controller && raw_joystick) {
                     if (input_dump) {
-                        (void)printf("SGRUB_INPUT hat=%u value=%u\\n",
+                        (void)printf("SGRUB_INPUT hat=%u value=%u\n",
                                      (unsigned int)event.jhat.hat,
                                      (unsigned int)event.jhat.value);
                         (void)fflush(stdout);
