@@ -85,9 +85,15 @@ After building the binary against the target sysroot:
 
     sh tools/package_muos_sgrub.sh
 
-The script creates dist/rtbm-sgrub.muxapp. Copy the archive to
-/mnt/mmc/ARCHIVE on the device and install it using muOS Archive Manager.
-It installs as a normal application under MUOS/application/RTBM-SGRUB.
+The script creates dist/rtbm-sgrub.muxapp. Copy the archive to the ARCHIVE
+folder at the root of SD1 and install it using muOS Archive Manager. It
+installs as a normal application under MUOS/application/RTBM-SGRUB.
+
+The launcher follows the official muOS application runner: it sources
+/opt/muos/script/var/func.sh, calls SETUP_APP with the modern controller
+profile, and uses MUOS_STORE_DIR for the SD1/SD2-neutral application path.
+This gives muOS control of SDL environment setup, CPU governor, HOME/XDG and
+foreground-process tracking. The launcher returns normally when SGRUB exits.
 
 This application launcher is separate from the asynchronous muOS user-init
 hook. Do not enable config/sgrub.enabled for this preview. The user-init
