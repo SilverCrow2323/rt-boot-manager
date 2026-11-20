@@ -21,10 +21,13 @@ The current build is deliberately a PROFILE-BROWSER PREVIEW:
 - The release browser reads the canonical release manifests and the separate muOS archive index.
 - Release rows distinguish current baselines, stable history, legacy builds, checksum availability and hardware gates.
 - A pins a release for the current SGRUB session; Y clears that pin and restores the current baseline.
+- X opens the read-only hardware diagnostics screen from any SGRUB page; D does the same on a keyboard.
+- Diagnostics report device-tree model/compatible strings, Linux-reported memory capacity, SDL output size and controller presence.
+- DDR generation and panel/PCB revision are deliberately shown as unknown until positively identified.
 - Session pins are memory-only: they are not written to the SD card or persisted after exit.
 - muOS archive entries are shown as provider-link-only metadata until the exact device image and checksum are resolved.
 - KNULLI legacy entries remain marked for checksum and hardware verification.
-- No download, install, kernel switch, reboot or timeout-based autoboot is enabled.
+- No download, install, kernel switch, reboot, block-device scan or timeout-based autoboot is enabled.
 
 The release browser is a read-only catalogue view. A session pin changes only
 the version label shown by the preview; it does not download an image, install
@@ -122,6 +125,7 @@ already-running frontend.
 - Capture the H700 controller GUID and button/hat events with --input-dump.
 - Verify A/B/Y mapping, hot-plug behaviour and clean return to muOS.
 - Check CPU use, frame pacing and display restoration after exit.
+- Confirm diagnostics match the actual board while RAM type and panel revision remain unclaimed until identified.
 - Test only as a normal application; do not install it as an early boot hook.
 
 Passing the host build and UI self-test does not certify the device runtime.

@@ -54,7 +54,7 @@ A separate **rootfs/chroot adapter** may support environments that share the cur
         ├── 99-rtbm-sgrub.sh    # Inert user-init bridge
         └── application/RTBM-SGRUB/mux_launch.sh
 
-See docs/SGRUB_UI.md for native build and muOS preview packaging instructions.
+See docs/SGRUB_UI.md for native build, release browser, hardware diagnostics and muOS preview packaging instructions.
 
 ## First target
 

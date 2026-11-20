@@ -15,7 +15,7 @@
 
 #define SCREEN_W 640
 #define SCREEN_H 480
-#define SGRUB_VERSION "0.1.0-preview"
+#define SGRUB_VERSION "0.2.0-preview"
 
 typedef struct {
     const char *id;
@@ -45,16 +45,21 @@ typedef struct {
 typedef enum {
     SCREEN_PROFILES,
     SCREEN_DETAILS,
-    SCREEN_RELEASES
+    SCREEN_RELEASES,
+    SCREEN_DIAGNOSTICS
 } UiScreen;
 
 typedef struct {
     int selected;
     int default_index;
     UiScreen screen;
+    UiScreen return_screen;
     int release_selected;
     int release_scroll;
     int pinned_release[SGRUB_PROFILE_COUNT];
+    char device_model[128];
+    char device_compatible[192];
+    char memory_total[48];
     bool running;
     bool input_dump;
     char last_input[40];
@@ -138,7 +143,8 @@ enum Action {
     ACTION_RIGHT,
     ACTION_ACCEPT,
     ACTION_BACK,
-    ACTION_DEFAULT
+    ACTION_DEFAULT,
+    ACTION_DIAGNOSTICS
 };
 
 static void set_color(SDL_Renderer *renderer, Rgb color)
@@ -232,6 +238,76 @@ static void draw_header(SDL_Renderer *renderer)
     draw_text(renderer, 84, 52, "SPDW FACTORY / SGRUB", 1, C_MUTED);
     draw_chip(renderer, 448, 27, 164, "H700 / PREVIEW", C_PANEL_HI, C_CYAN);
     hline(renderer, 28, 612, 82, C_LINE);
+}
+
+static bool read_device_tree_text(const char *path, char *buffer, size_t capacity)
+{
+    FILE *file;
+    size_t length;
+    size_t output = 0;
+    bool previous_space = false;
+
+    if (capacity < 2) {
+        return false;
+    }
+    file = fopen(path, "rb");
+    if (!file) {
+        return false;
+    }
+    length = fread(buffer, 1, capacity - 1, file);
+    (void)fclose(file);
+    buffer[length] = '\0';
+
+    for (size_t i = 0; i < length; ++i) {
+        unsigned char ch = (unsigned char)buffer[i];
+        bool is_space = ch == 0 || ch == '\n' || ch == '\r' || ch == '\t' || ch == ' ';
+        if (is_space) {
+            if (output > 0 && !previous_space && output + 1 < capacity) {
+                buffer[output++] = ' ';
+            }
+            previous_space = true;
+        } else if (isprint(ch) && output + 1 < capacity) {
+            buffer[output++] = (char)ch;
+            previous_space = false;
+        }
+    }
+    if (output > 0 && buffer[output - 1] == ' ') {
+        --output;
+    }
+    buffer[output] = '\0';
+    return output > 0;
+}
+
+static void read_runtime_diagnostics(UiState *state)
+{
+    if (!read_device_tree_text("/proc/device-tree/model",
+                               state->device_model, sizeof(state->device_model)) &&
+        !read_device_tree_text("/sys/firmware/devicetree/base/model",
+                               state->device_model, sizeof(state->device_model))) {
+        (void)snprintf(state->device_model, sizeof(state->device_model), "NOT EXPOSED");
+    }
+
+    if (!read_device_tree_text("/proc/device-tree/compatible",
+                               state->device_compatible, sizeof(state->device_compatible)) &&
+        !read_device_tree_text("/sys/firmware/devicetree/base/compatible",
+                               state->device_compatible, sizeof(state->device_compatible))) {
+        (void)snprintf(state->device_compatible, sizeof(state->device_compatible), "NOT EXPOSED");
+    }
+
+    (void)snprintf(state->memory_total, sizeof(state->memory_total), "NOT AVAILABLE");
+    FILE *meminfo = fopen("/proc/meminfo", "r");
+    if (meminfo) {
+        char line[160];
+        while (fgets(line, sizeof(line), meminfo)) {
+            unsigned long total_kb = 0;
+            if (sscanf(line, "MemTotal: %lu kB", &total_kb) == 1) {
+                (void)snprintf(state->memory_total, sizeof(state->memory_total),
+                               "%lu MB REPORTED", total_kb / 1024ul);
+                break;
+            }
+        }
+        (void)fclose(meminfo);
+    }
 }
 
 static int profile_release_count(int profile_index)
@@ -496,23 +572,71 @@ static void draw_release_screen(SDL_Renderer *renderer, const UiState *state)
     draw_text(renderer, 28, 398, "NO DOWNLOAD OR INSTALL ACTION IN THIS BUILD.", 1, C_RED);
 }
 
+static void draw_diagnostics_screen(SDL_Renderer *renderer, const UiState *state,
+                                    bool controller_connected)
+{
+    int output_width = 0;
+    int output_height = 0;
+    char display[48];
+
+    (void)SDL_GetRendererOutputSize(renderer, &output_width, &output_height);
+    if (output_width > 0 && output_height > 0) {
+        (void)snprintf(display, sizeof(display), "%d X %d", output_width, output_height);
+    } else {
+        (void)snprintf(display, sizeof(display), "NOT REPORTED");
+    }
+
+    draw_text(renderer, 28, 101, "DEVICE DIAGNOSTICS", 1, C_MUTED);
+    rect(renderer, 28, 120, 584, 278, C_PANEL);
+    outline(renderer, 28, 120, 584, 278, C_LINE);
+    draw_text(renderer, 50, 142, "DEVICE TREE", 1, C_CYAN);
+    draw_text(renderer, 50, 164, "MODEL", 1, C_MUTED);
+    draw_text(renderer, 50, 179, state->device_model, 1, C_TEXT);
+    draw_text(renderer, 50, 208, "COMPATIBLE", 1, C_MUTED);
+    draw_text(renderer, 50, 223, state->device_compatible, 1, C_TEXT);
+    draw_text(renderer, 50, 258, "LINUX MEMORY REPORT", 1, C_CYAN);
+    draw_text(renderer, 50, 281, "TOTAL", 1, C_MUTED);
+    draw_text(renderer, 50, 296, state->memory_total, 1, C_TEXT);
+
+    hline(renderer, 346, 346, 142, C_LINE);
+    draw_text(renderer, 370, 142, "HARDWARE GATES", 1, C_CYAN);
+    draw_text(renderer, 370, 169, "RAM TYPE", 1, C_MUTED);
+    draw_text(renderer, 370, 184, "NOT IDENTIFIED", 1, C_ORANGE);
+    draw_text(renderer, 370, 214, "PANEL REVISION", 1, C_MUTED);
+    draw_text(renderer, 370, 229, "NOT VERIFIED", 1, C_ORANGE);
+    draw_text(renderer, 370, 259, "SDL OUTPUT", 1, C_MUTED);
+    draw_text(renderer, 370, 274, display, 1, C_TEXT);
+    draw_text(renderer, 370, 304, "CONTROLLER", 1, C_MUTED);
+    draw_text(renderer, 370, 319,
+              controller_connected ? "CONNECTED" : "NOT DETECTED",
+              1, controller_connected ? C_CYAN : C_ORANGE);
+    hline(renderer, 50, 590, 350, C_LINE);
+    draw_text(renderer, 50, 366, "MEMORY CAPACITY DOES NOT IDENTIFY DDR GENERATION.", 1, C_ORANGE);
+    draw_text(renderer, 50, 382, "READ ONLY  /  NO PARTITION OR BOOTLOADER SCAN.", 1, C_MUTED);
+}
+
 static void draw_footer(SDL_Renderer *renderer, const UiState *state)
 {
     hline(renderer, 28, 612, 420, C_LINE);
-    if (state->screen == SCREEN_DETAILS) {
+    if (state->screen == SCREEN_DIAGNOSTICS) {
+        draw_text(renderer, 30, 441, "A OR B  BACK", 1, C_TEXT);
+    } else if (state->screen == SCREEN_DETAILS) {
         draw_text(renderer, 30, 441, "A  RELEASES", 1, C_CYAN);
         draw_text(renderer, 190, 441, "B  PROFILES", 1, C_TEXT);
         draw_text(renderer, 352, 441, "Y  SET DEFAULT OS", 1, C_ACCENT);
+        draw_text(renderer, 520, 441, "X DIAG", 1, C_ORANGE);
     } else if (state->screen == SCREEN_RELEASES) {
         draw_text(renderer, 30, 441, "DPAD  BROWSE", 1, C_TEXT);
         draw_text(renderer, 190, 441, "A  PIN SESSION", 1, C_ACCENT);
         draw_text(renderer, 385, 441, "B  BACK", 1, C_TEXT);
+        draw_text(renderer, 520, 441, "X DIAG", 1, C_ORANGE);
         draw_text(renderer, 490, 461, "Y  RESET PIN", 1, C_ORANGE);
     } else {
         draw_text(renderer, 30, 441, "DPAD  MOVE", 1, C_TEXT);
         draw_text(renderer, 160, 441, "A  DETAILS", 1, C_CYAN);
         draw_text(renderer, 292, 441, "B  EXIT", 1, C_TEXT);
         draw_text(renderer, 398, 441, "Y  SET DEFAULT", 1, C_ACCENT);
+        draw_text(renderer, 520, 441, "X DIAG", 1, C_ORANGE);
     }
     draw_text(renderer, 30, 461, "PREVIEW ONLY  /  NO STORAGE WRITES  /  NO BOOTLOADER CHANGES",
               1, C_MUTED);
@@ -527,7 +651,9 @@ static void render(SDL_Renderer *renderer, const UiState *state,
     rect(renderer, 0, 0, SCREEN_W, SCREEN_H, C_BG);
     draw_header(renderer);
 
-    if (state->screen == SCREEN_RELEASES) {
+    if (state->screen == SCREEN_DIAGNOSTICS) {
+        draw_diagnostics_screen(renderer, state, controller_connected);
+    } else if (state->screen == SCREEN_RELEASES) {
         draw_release_screen(renderer, state);
     } else if (state->screen == SCREEN_DETAILS) {
         draw_detail_screen(renderer, state, controller_connected);
@@ -548,6 +674,18 @@ static void render(SDL_Renderer *renderer, const UiState *state,
 
 static void act(UiState *state, enum Action action)
 {
+    if (action == ACTION_DIAGNOSTICS && state->screen != SCREEN_DIAGNOSTICS) {
+        state->return_screen = state->screen;
+        state->screen = SCREEN_DIAGNOSTICS;
+        return;
+    }
+    if (state->screen == SCREEN_DIAGNOSTICS) {
+        if (action == ACTION_ACCEPT || action == ACTION_BACK ||
+            action == ACTION_DIAGNOSTICS) {
+            state->screen = state->return_screen;
+        }
+        return;
+    }
     if (state->screen == SCREEN_RELEASES) {
         if (action == ACTION_UP || action == ACTION_LEFT) {
             move_release_selection(state, -1);
@@ -645,6 +783,11 @@ static void handle_raw_button(UiState *state, Uint8 button)
         act(state, ACTION_DEFAULT);
         return;
     }
+    mapped = configured_button("RTBM_RAW_X_BUTTON");
+    if (mapped >= 0 && button == (Uint8)mapped) {
+        act(state, ACTION_DIAGNOSTICS);
+        return;
+    }
     mapped = configured_button("RTBM_RAW_L1_BUTTON");
     if (mapped >= 0 && button == (Uint8)mapped) {
         act(state, ACTION_LEFT);
@@ -737,6 +880,7 @@ static void handle_controller_button(UiState *state, Uint8 button)
     case SDL_CONTROLLER_BUTTON_A:              act(state, ACTION_ACCEPT); break;
     case SDL_CONTROLLER_BUTTON_B:              act(state, ACTION_BACK); break;
     case SDL_CONTROLLER_BUTTON_Y:              act(state, ACTION_DEFAULT); break;
+    case SDL_CONTROLLER_BUTTON_X:              act(state, ACTION_DIAGNOSTICS); break;
     default: break;
     }
 }
@@ -747,9 +891,10 @@ static void usage(const char *program)
         "Rt:BOOT MANAGER / SGRUB %s\n"
         "Usage: %s [--fullscreen] [--input-dump] [--mapping-file PATH] [--self-test] [--version]\n"
         "\n"
-        "This preview browses profiles only. It does not boot, reboot or write storage.\n"
+        "This preview browses profiles, release history and read-only diagnostics.\n"
+        "It does not download, install, boot, reboot or write storage.\n"
         "Optional SDL GameController mappings can be loaded from a text database.\n"
-        "Raw joystick button mappings may be supplied with RTBM_RAW_*_BUTTON variables.\n",
+        "Raw joystick buttons can be mapped with RTBM_RAW_*_BUTTON variables.\n",
         SGRUB_VERSION, program);
 }
 
@@ -809,6 +954,7 @@ int main(int argc, char **argv)
     for (size_t p = 0; p < SGRUB_PROFILE_COUNT; ++p) {
         state.pinned_release[p] = -1;
     }
+    read_runtime_diagnostics(&state);
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER |
                  SDL_INIT_JOYSTICK | SDL_INIT_EVENTS) != 0) {
@@ -895,6 +1041,7 @@ int main(int argc, char **argv)
                 case SDLK_ESCAPE:
                 case SDLK_BACKSPACE: act(&state, ACTION_BACK); break;
                 case SDLK_y:        act(&state, ACTION_DEFAULT); break;
+                case SDLK_d:        act(&state, ACTION_DIAGNOSTICS); break;
                 default: break;
                 }
                 break;

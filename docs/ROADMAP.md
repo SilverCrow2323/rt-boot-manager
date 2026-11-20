@@ -41,10 +41,12 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Add optional SDL controller database loading and input diagnostics.
 - [x] Add a native read-only release-history/version screen for muOS, ROCKNIX and KNULLI.
 - [x] Add session-only release pin selection and reset controls.
+- [x] Add a read-only diagnostics screen for device tree, reported memory, SDL output and controller presence.
 - [ ] Persist per-OS release pins and connect them to validated installation plans.
 - [ ] Refine the SPDW visual system and release detail presentation.
 - [ ] Add compatibility-aware update selection after physical hardware detection.
-- [ ] Add status / diagnostics / recovery screens.
+- [x] Add read-only hardware and input diagnostics screen.
+- [ ] Add status and recovery screens.
 - [ ] Test framebuffer, controller mapping and clean return to muOS on RG35XX H.
 - [ ] Implement and validate a real boot adapter before enabling any boot action.
 
