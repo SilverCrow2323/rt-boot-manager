@@ -45,7 +45,7 @@ The optional --input-dump mode prints the controller name, GUID, SDL mapping,
 button and axis counts, and incoming button/hat events. This helps collect a
 mapping from the actual handheld without guessing its button order.
 
-A device-verified SDL GameController database can be loaded explicitly:
+The SDL2 mapping-file loader is part of SDL since version 2.0.2. A device-verified SDL GameController database can be loaded explicitly:
 
     ui/sgrub/native/build/sgrub --input-dump --mapping-file ./gamecontrollerdb.txt
 
