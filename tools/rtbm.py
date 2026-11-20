@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from rtbm.catalog import CatalogError, get_profile, load_profiles, profile_summary  # noqa: E402
 from rtbm.device import probe_device  # noqa: E402
 from rtbm.planner import make_plan  # noqa: E402
-from rtbm.releases import load_release_manifests  # noqa: E402
+from rtbm.releases import load_release_history, load_release_manifests  # noqa: E402
 
 
 def output(value: object) -> None:
@@ -41,6 +41,21 @@ def command_validate(_args: argparse.Namespace) -> int:
         "profile_ids": [item["id"] for item in profiles],
         "release_count": len(releases),
         "releases": [f'{item["os_id"]}:{item["tag"]}' for item in releases],
+    })
+    return 0
+
+
+def command_releases(args: argparse.Namespace) -> int:
+    manifests = load_release_manifests()
+    histories = load_release_history()
+    if args.os:
+        manifests = [item for item in manifests if item["os_id"] == args.os]
+        histories = [item for item in histories if item["os_id"] == args.os]
+    output({
+        "release_manifests": manifests,
+        "history_indexes": histories,
+        "manifest_count": len(manifests),
+        "history_index_count": len(histories),
     })
     return 0
 
@@ -72,6 +87,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     validating = sub.add_parser("validate", help="validate local OS profiles")
     validating.set_defaults(func=command_validate)
+
+    releases = sub.add_parser("releases", help="list retained release manifests and history indexes")
+    releases.add_argument("--os", choices=["muos", "rocknix", "knulli"])
+    releases.set_defaults(func=command_releases)
 
     planning = sub.add_parser("plan", help="create a non-destructive boot plan")
     planning.add_argument("profile", help="profile id")

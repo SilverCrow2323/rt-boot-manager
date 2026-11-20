@@ -58,6 +58,55 @@ def validate_release_manifest(data: Any, source: str = "<memory>") -> dict[str, 
     return data
 
 
+def default_history_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "catalog" / "release-history"
+
+
+def load_release_history(history_dir: Path | None = None) -> list[dict[str, Any]]:
+    """Load provider-indexed release history that is not yet an installable manifest."""
+    directory = history_dir or default_history_dir()
+    if not directory.is_dir():
+        return []
+    histories: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for path in sorted(directory.rglob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ReleaseCatalogError(f"{path}: cannot read history JSON: {exc}") from exc
+        if not isinstance(data, dict) or data.get("schema_version") != 1:
+            raise ReleaseCatalogError(f"{path}: invalid release history schema")
+        os_id = data.get("os_id")
+        if not isinstance(os_id, str) or not os_id or os_id in seen:
+            raise ReleaseCatalogError(f"{path}: invalid or duplicate history os_id")
+        if not isinstance(data.get("source"), str) or not data["source"].startswith("https://"):
+            raise ReleaseCatalogError(f"{path}: history source must be HTTPS")
+        current = data.get("current")
+        archived = data.get("archived")
+        if not isinstance(current, dict) or not isinstance(current.get("tag"), str):
+            raise ReleaseCatalogError(f"{path}: history needs a current release tag")
+        if not isinstance(archived, list):
+            raise ReleaseCatalogError(f"{path}: archived releases must be a list")
+        tags = {current["tag"]}
+        for entry in archived:
+            if not isinstance(entry, dict):
+                raise ReleaseCatalogError(f"{path}: archived release entry must be an object")
+            tag = entry.get("tag")
+            page = entry.get("release_page")
+            if not isinstance(tag, str) or not tag or tag in tags:
+                raise ReleaseCatalogError(f"{path}: invalid or duplicate archived release tag")
+            if not isinstance(page, str) or not page.startswith("https://"):
+                raise ReleaseCatalogError(f"{path}: archived release page must be HTTPS")
+            if entry.get("sha256") is not None and (
+                not isinstance(entry["sha256"], str) or not SHA256.fullmatch(entry["sha256"])
+            ):
+                raise ReleaseCatalogError(f"{path}: invalid archived release SHA-256")
+            tags.add(tag)
+        seen.add(os_id)
+        histories.append(data)
+    return histories
+
+
 def load_release_manifests(release_dir: Path | None = None) -> list[dict[str, Any]]:
     directory = release_dir or default_release_dir()
     if not directory.is_dir():
