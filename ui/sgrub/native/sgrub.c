@@ -605,18 +605,22 @@ int main(int argc, char **argv)
                 }
                 break;
             case SDL_JOYHATMOTION:
-                if (event.jhat.value & SDL_HAT_UP) {
-                    act(&state, ACTION_UP);
-                } else if (event.jhat.value & SDL_HAT_DOWN) {
-                    act(&state, ACTION_DOWN);
-                } else if (event.jhat.value & SDL_HAT_LEFT) {
-                    act(&state, ACTION_LEFT);
-                } else if (event.jhat.value & SDL_HAT_RIGHT) {
-                    act(&state, ACTION_RIGHT);
+                if (!controller && raw_joystick) {
+                    if (event.jhat.value & SDL_HAT_UP) {
+                        act(&state, ACTION_UP);
+                    } else if (event.jhat.value & SDL_HAT_DOWN) {
+                        act(&state, ACTION_DOWN);
+                    } else if (event.jhat.value & SDL_HAT_LEFT) {
+                        act(&state, ACTION_LEFT);
+                    } else if (event.jhat.value & SDL_HAT_RIGHT) {
+                        act(&state, ACTION_RIGHT);
+                    }
                 }
                 break;
             case SDL_JOYBUTTONDOWN:
-                handle_raw_button(&state, event.jbutton.button);
+                if (!controller && raw_joystick) {
+                    handle_raw_button(&state, event.jbutton.button);
+                }
                 break;
             case SDL_JOYDEVICEADDED:
                 if (!controller && !raw_joystick) {
