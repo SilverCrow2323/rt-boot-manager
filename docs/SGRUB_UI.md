@@ -41,8 +41,20 @@ For a physical framebuffer/fullscreen test:
 
     ui/sgrub/native/build/sgrub --fullscreen
 
-The optional --input-dump mode prints raw joystick button numbers. This helps
-collect a mapping from the actual handheld without guessing its button order.
+The optional --input-dump mode prints the controller name, GUID, SDL mapping,
+button and axis counts, and incoming button/hat events. This helps collect a
+mapping from the actual handheld without guessing its button order.
+
+A device-verified SDL GameController database can be loaded explicitly:
+
+    ui/sgrub/native/build/sgrub --input-dump --mapping-file ./gamecontrollerdb.txt
+
+For the muOS app, place the verified file at
+MUOS/application/RTBM-SGRUB/gamecontrollerdb.txt. The launcher detects it and
+passes it to SDL automatically. The project does not enable an assumed H700
+button mapping by default: controller GUIDs and SDL databases can vary between
+firmware builds.
+
 For a raw joystick that SDL does not recognize as a GameController, button
 indices may be mapped explicitly with RTBM_RAW_A_BUTTON,
 RTBM_RAW_B_BUTTON, RTBM_RAW_Y_BUTTON, RTBM_RAW_L1_BUTTON and
