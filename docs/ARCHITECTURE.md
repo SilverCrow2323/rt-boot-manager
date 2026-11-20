@@ -8,7 +8,7 @@ SGRUB is the selector UI. Rt:BOOT CORE is the inventory and policy layer. OS-spe
 
 ## Execution layers
 
-1. SGRUB UI — controller navigation, system cards, version picker, timeout, default selection, diagnostics and recovery entry.
+1. SGRUB UI — SDL2 640x480 profile-browser preview with controller navigation and per-profile details. Boot selection, timeout and reboot actions remain disconnected until validated adapters exist.
 2. Profile engine — schema validation, release resolution, hardware compatibility and installation-state inventory.
 3. Boot planner — converts a selected profile into a typed plan. The planner does not execute privileged operations.
 4. Boot adapters — U-Boot/native firmware, muOS user-init hand-off, Stock dmenu hand-off and shared-kernel rootfs/chroot.
