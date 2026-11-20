@@ -458,8 +458,49 @@ static SDL_Joystick *open_first_raw_joystick(void)
     return NULL;
 }
 
+static void dump_joystick_info(SDL_Joystick *joystick, const char *kind)
+{
+    char guid_text[64] = {0};
+    if (!joystick) {
+        return;
+    }
+    SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(joystick),
+                              guid_text, (int)sizeof(guid_text));
+    (void)printf("SGRUB_INPUT kind=%s name=%s guid=%s buttons=%d hats=%d axes=%d\\n",
+                 kind,
+                 SDL_JoystickName(joystick) ? SDL_JoystickName(joystick) : "unknown",
+                 guid_text,
+                 SDL_JoystickNumButtons(joystick),
+                 SDL_JoystickNumHats(joystick),
+                 SDL_JoystickNumAxes(joystick));
+    (void)fflush(stdout);
+}
+
+static void dump_controller_mapping(SDL_GameController *controller)
+{
+    char *mapping;
+    SDL_Joystick *joystick;
+    if (!controller) {
+        return;
+    }
+    joystick = SDL_GameControllerGetJoystick(controller);
+    dump_joystick_info(joystick, "gamecontroller");
+    mapping = SDL_GameControllerMapping(controller);
+    if (mapping) {
+        (void)printf("SGRUB_INPUT mapping=%s\\n", mapping);
+        SDL_free(mapping);
+    }
+    (void)fflush(stdout);
+}
+
 static void handle_controller_button(UiState *state, Uint8 button)
 {
+    if (state->input_dump) {
+        (void)snprintf(state->last_input, sizeof(state->last_input), "PAD BTN %u",
+                       (unsigned int)button);
+        (void)printf("SGRUB_INPUT controller_button=%u\\n", (unsigned int)button);
+        (void)fflush(stdout);
+    }
     switch (button) {
     case SDL_CONTROLLER_BUTTON_DPAD_UP:        act(state, ACTION_UP); break;
     case SDL_CONTROLLER_BUTTON_DPAD_DOWN:      act(state, ACTION_DOWN); break;
@@ -566,6 +607,16 @@ int main(int argc, char **argv)
         raw_joystick = open_first_raw_joystick();
         controller_connected = raw_joystick != NULL;
     }
+    if (input_dump) {
+        if (controller) {
+            dump_controller_mapping(controller);
+        } else if (raw_joystick) {
+            dump_joystick_info(raw_joystick, "raw");
+        } else {
+            (void)printf("SGRUB_INPUT no_controller_detected\\n");
+            (void)fflush(stdout);
+        }
+    }
 
     while (state.running) {
         SDL_Event event;
@@ -617,6 +668,12 @@ int main(int argc, char **argv)
                 break;
             case SDL_JOYHATMOTION:
                 if (!controller && raw_joystick) {
+                    if (input_dump) {
+                        (void)printf("SGRUB_INPUT hat=%u value=%u\\n",
+                                     (unsigned int)event.jhat.hat,
+                                     (unsigned int)event.jhat.value);
+                        (void)fflush(stdout);
+                    }
                     if (event.jhat.value & SDL_HAT_UP) {
                         act(&state, ACTION_UP);
                     } else if (event.jhat.value & SDL_HAT_DOWN) {
