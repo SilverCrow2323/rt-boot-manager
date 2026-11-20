@@ -1,0 +1,93 @@
+# SGRUB graphical frontend
+
+## Current implementation
+
+The first graphical frontend is a native SDL2 application targeting the
+RG35XX H's 640x480 display. It uses SDL2's software renderer and an embedded
+bitmap font. It does not require X11, Wayland, SDL_ttf, SDL_image or a Python
+runtime on the handheld.
+
+The visible profile table is generated from the canonical catalog/os/*.json
+manifests by tools/generate_sgrub_profiles.py. The native renderer must not
+become a second source of truth for OS names, versions or boot modes.
+
+The current build is deliberately a PROFILE-BROWSER PREVIEW:
+
+- D-pad / arrow keys move between muOS, ROCKNIX and KNULLI.
+- A / Enter opens the selected profile details.
+- B / Escape returns or exits to the muOS application launcher.
+- Y sets the default profile for the current application session only.
+- The UI shows hardware checks and boot path information from the catalogue.
+- No timeout-based autoboot is enabled.
+
+The status BOOT HANDOFF: NOT CONNECTED is intentional. Selecting a profile
+does not start another kernel, request a reboot, alter the boot configuration
+or write to storage. A boot adapter must be implemented and validated before
+the UI can advertise a system as bootable.
+
+## Build on a Linux development host
+
+Install SDL2 development files and a C compiler, then run:
+
+    python3 tools/generate_sgrub_profiles.py
+    make -C ui/sgrub/native clean all
+    ui/sgrub/native/build/sgrub --self-test
+
+Run the preview window:
+
+    ui/sgrub/native/build/sgrub
+
+For a physical framebuffer/fullscreen test:
+
+    ui/sgrub/native/build/sgrub --fullscreen
+
+The optional --input-dump mode prints raw joystick button numbers. This helps
+collect a mapping from the actual handheld without guessing its button order.
+For a raw joystick that SDL does not recognize as a GameController, button
+indices may be mapped explicitly with RTBM_RAW_A_BUTTON,
+RTBM_RAW_B_BUTTON, RTBM_RAW_Y_BUTTON, RTBM_RAW_L1_BUTTON and
+RTBM_RAW_R1_BUTTON. Leave them unset until the RG35XX H input report has
+been collected. Raw joystick hats are used for D-pad navigation.
+
+## Cross-compiling for muOS
+
+muOS has no X11 or Wayland display server; handheld applications use the SDL2
+library shipped by the firmware. Build against an ABI-compatible aarch64
+toolchain and the device's SDL2 sysroot, rather than linking against a newer
+desktop glibc and copying that binary onto the handheld.
+
+Example, after preparing an aarch64 sysroot containing the firmware's SDL2
+headers and library:
+
+    make -C ui/sgrub/native clean all \
+      CC=aarch64-linux-gnu-gcc \
+      PKG_CONFIG_SYSROOT_DIR="$RTBM_SYSROOT" \
+      PKG_CONFIG_LIBDIR="$RTBM_SYSROOT/usr/lib/pkgconfig:$RTBM_SYSROOT/usr/share/pkgconfig"
+
+Toolchain and sysroot paths vary by host. Confirm the resulting executable's
+ELF interpreter and required GLIBC symbol versions before deploying it.
+
+## Build a muOS application archive
+
+After building the binary against the target sysroot:
+
+    tools/package_muos_sgrub.sh
+
+The script creates dist/rtbm-sgrub.muxapp. Copy the archive to
+/mnt/mmc/ARCHIVE on the device and install it using muOS Archive Manager.
+It installs as a normal application under MUOS/application/RTBM-SGRUB.
+
+This application launcher is separate from the asynchronous muOS user-init
+hook. Do not enable config/sgrub.enabled for this preview. The user-init
+hook remains inert and is not a safe way to steal the framebuffer from an
+already-running frontend.
+
+## Device validation still required
+
+- Confirm SDL2 opens the physical 640x480 display on the exact muOS build.
+- Capture the H700 controller GUID and button/hat events with --input-dump.
+- Verify A/B/Y mapping, hot-plug behaviour and clean return to muOS.
+- Check CPU use, frame pacing and display restoration after exit.
+- Test only as a normal application; do not install it as an early boot hook.
+
+Passing the host build and UI self-test does not certify the device runtime.
