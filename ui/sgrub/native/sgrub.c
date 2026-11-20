@@ -23,7 +23,8 @@ typedef struct {
     const char *version;
     const char *status;
     const char *boot_mode;
-    bool needs_hardware_check;
+    bool requires_known_ram;
+    bool requires_dtb;
 } SgrubProfile;
 
 #include "profiles.generated.h"
@@ -180,6 +181,20 @@ static int draw_text(SDL_Renderer *renderer, int x, int y, const char *text,
     return x - origin_x;
 }
 
+static const char *hardware_check_label(const SgrubProfile *profile)
+{
+    if (profile->requires_known_ram && profile->requires_dtb) {
+        return "RAM + DTB CHECK";
+    }
+    if (profile->requires_known_ram) {
+        return "RAM CHECK";
+    }
+    if (profile->requires_dtb) {
+        return "PANEL DTB CHECK";
+    }
+    return "BOARD CHECK";
+}
+
 static void draw_chip(SDL_Renderer *renderer, int x, int y, int w,
                       const char *label, Rgb fill, Rgb ink)
 {
@@ -220,7 +235,7 @@ static void draw_profile_card(SDL_Renderer *renderer, int index, int y,
     } else if (selected) {
         draw_chip(renderer, 310, y + 16, 76, "SELECTED", C_PANEL_2, C_CYAN);
     }
-    if (profile->needs_hardware_check) {
+    if (profile->requires_known_ram || profile->requires_dtb) {
         draw_text(renderer, 310, y + 57, "VERIFY HW", 1, C_ORANGE);
     }
 }
@@ -242,9 +257,7 @@ static void draw_selected_panel(SDL_Renderer *renderer, const UiState *state,
     draw_text(renderer, 430, 258, profile->boot_mode, 1, C_TEXT);
 
     draw_text(renderer, 430, 287, "HARDWARE", 1, C_MUTED);
-    draw_text(renderer, 430, 301,
-              profile->needs_hardware_check ? "RAM / DTB CHECK" : "BOARD CHECK",
-              1, C_ORANGE);
+    draw_text(renderer, 430, 301, hardware_check_label(profile), 1, C_ORANGE);
 
     hline(renderer, 430, 596, 326, C_LINE);
     draw_text(renderer, 430, 342, "BOOT HANDOFF", 1, C_MUTED);
@@ -277,9 +290,7 @@ static void draw_detail_screen(SDL_Renderer *renderer, const UiState *state,
     draw_text(renderer, 368, 244, "NO REBOOT OR", 1, C_MUTED);
     draw_text(renderer, 368, 257, "KERNEL SWITCH", 1, C_MUTED);
     draw_text(renderer, 368, 284, "HARDWARE CHECK", 1, C_ORANGE);
-    draw_text(renderer, 368, 301,
-              profile->needs_hardware_check ? "RAM + PANEL DTB" : "BOARD + PANEL",
-              1, C_TEXT);
+    draw_text(renderer, 368, 301, hardware_check_label(profile), 1, C_TEXT);
     draw_text(renderer, 368, 330,
               controller_connected ? "PAD CONNECTED" : "KEYBOARD READY",
               1, C_CYAN);
