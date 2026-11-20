@@ -33,6 +33,7 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Build the first 640x480 SDL2 graphical profile-browser renderer.
 - [x] Generate native SGRUB profile data from the canonical OS catalogue.
 - [x] Add a muOS application archive builder for the profile-browser preview.
+- [x] Add optional SDL controller database loading and input diagnostics.
 - [ ] Refine the SPDW visual system and add release/version selection screens.
 - [ ] Add version picker, release channel, compatibility explanation and per-OS update pinning.
 - [ ] Add status / diagnostics / recovery screens.
