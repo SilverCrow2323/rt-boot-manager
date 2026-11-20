@@ -8,7 +8,7 @@ The important consequence is that a user-init script is a post-kernel asynchrono
 
 ## SGRUB integration modes
 
-- muos-user-init: post-kernel diagnostics, optional UI hand-off or a controlled reboot request after a native boot adapter has been validated.
+- muos-user-init: post-kernel diagnostics, or a controlled reboot request after a native boot adapter has been validated. A fullscreen UI must not be launched from this asynchronous hook until foreground-process, display and input hand-off are implemented and tested.
 - native-pre-kernel: future U-Boot/boot-chain integration. This is required for true kernel switching between ROCKNIX, KNULLI and other full firmware images.
 
 The first mode is useful but is not a native multiboot implementation.
@@ -18,6 +18,8 @@ The first mode is useful but is not a native multiboot implementation.
 The bundled hook is inert by default. It requires an explicit enable marker in the Rt:BOOT MANAGER installation. If SGRUB is absent or disabled, the hook logs and exits. It does not kill muOS services, steal the framebuffer, modify partitions or write bootloader state.
 
 The project installer must not toggle the muOS User Init Scripts setting without the user's explicit action. Enable it through Configuration → Advanced → User Init Scripts.
+
+The current SDL2 SGRUB profile-browser preview is packaged as a normal muOS application (see [SGRUB UI](SGRUB_UI.md)). It is not launched by this hook. Keep the separate SGRUB marker absent while testing the application.
 
 ## References
 
