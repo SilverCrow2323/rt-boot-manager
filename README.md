@@ -10,7 +10,7 @@ The project aims to manage verified operating-system images, version-pinned rele
 - **Additional systems:** Anbernic Stock OS, Stock OS MOD, GarlicOS 2 and MinUI.
 - **Future profiles:** other H700 devices and compatible Linux environments after validation.
 
-> **Status: early development.** The repository currently defines the architecture, profile catalogue and read-only tooling. It does not yet install bootloaders, rewrite partition tables, modify U-Boot environment data, flash images or boot alternate kernels.
+> **Status: early development.** The repository now includes a native SDL2 SGRUB profile-browser preview and read-only profile/device tooling. The preview is not a bootloader: it does not install bootloaders, rewrite partition tables, modify U-Boot environment data, flash images or boot alternate kernels.
 
 ## Project principles
 
@@ -49,11 +49,18 @@ A separate **rootfs/chroot adapter** may support environments that share the cur
 ├── schema/
 │   └── os-profile.schema.json
 ├── src/rtbm/               # Read-only profile, device, planner and SGRUB state
+├── ui/sgrub/native/         # SDL2 640x480 profile-browser frontend
 ├── tests/                  # Host-side contract tests
 ├── tools/
 │   └── rtbm.py             # Read-only CLI
+├── tools/
+│   ├── rtbm.py              # Read-only CLI
+│   ├── generate_sgrub_profiles.py
+│   └── package_muos_sgrub.sh
 └── integrations/muos/
-    └── 99-rtbm-sgrub.sh    # Opt-in user-init bridge (not a pre-kernel bootloader)
+    ├── 99-rtbm-sgrub.sh    # Inert user-init bridge (not a pre-kernel bootloader)
+    └── application/RTBM-SGRUB/mux_launch.sh
+
 ```
 
 ## First target
@@ -65,6 +72,13 @@ A separate **rootfs/chroot adapter** may support environments that share the cur
 - Additional profiles: Stock OS, Stock OS MOD, GarlicOS 2 and MinUI
 
 H700 devices and even RG35XX H board revisions may differ in RAM and display panel details. The project will not infer a DTB or RAM variant from the product name alone.
+
+## SGRUB graphical preview
+
+The first native SDL2 profile-browser build and muOS application packaging
+workflow are documented in [SGRUB UI](docs/SGRUB_UI.md). It is a preview only:
+the boot hand-off is intentionally disconnected until the relevant adapter and
+hardware recovery path have been validated.
 
 ## Read-only CLI
 
