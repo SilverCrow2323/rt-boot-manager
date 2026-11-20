@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "os_id": "muos",
+  "source": "https://muos.dev/release/archive",
+  "current": {
+    "tag": "2606.0",
+    "name": "Andromeda",
+    "channel": "stable",
+    "release_page": "https://muos.dev/release/current/2606_0"
+  },
+  "archived_download_model": "provider_portal",
+  "archived_note": "MustardOS publishes archived release pages with external Gofile/MEGA download providers. These entries are selectable history metadata only; they are not verified image manifests. Resolve the exact RG35XX H download and calculate SHA-256 before installation.",
+  "archived": [
+    {
+      "tag": "2601.1",
+      "name": "Funky Jacaranda",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2601_1",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2601.0",
+      "name": "Jacaranda",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2601_0",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2508.4",
+      "name": "Loose Goose",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2508_4",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2508.3",
+      "name": "Golden Goose",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2508_3",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2508.2",
+      "name": "Silly Goose",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2508_2",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2508.1",
+      "name": "Canada Goose",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2508_1",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2508.0",
+      "name": "Goose",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2508_0",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2502.0",
+      "name": "Pixie",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2502_0",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2410.3",
+      "name": "AW Banana",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2410_3",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2410.2",
+      "name": "Big Banana",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2410_2",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2410.1",
+      "name": "Banana",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2410_1",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2405.2",
+      "name": "Baked Beans",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2405_2",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2405.1",
+      "name": "Refried Beans",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2405_1",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2405.0",
+      "name": "Beans",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2405_0",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    },
+    {
+      "tag": "2403.0",
+      "name": "Origin",
+      "channel": "legacy",
+      "release_page": "https://muos.dev/release/archive/2403_0",
+      "asset_state": "provider_download_not_yet_resolved",
+      "sha256": null
+    }
+  ]
+}

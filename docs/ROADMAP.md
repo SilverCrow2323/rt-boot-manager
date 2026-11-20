@@ -21,7 +21,11 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Add ROCKNIX 20261101 DDR3/DDR4 manifests, SHA-256 and DTB mapping.
 - [x] Add KNULLI Scarab 20260511 H700 image manifest.
 - [x] Add release-manifest validation.
-- [ ] Import and retain selectable historical stable releases for all three main systems.
+- [x] Retain five earlier ROCKNIX H700 releases with release-specific asset checksums.
+- [x] Retain four legacy KNULLI RG35XX H release records with explicit checksum-verification requirements.
+- [x] Index the 15 archived muOS releases without inventing provider URLs, image filenames or checksums.
+- [ ] Resolve and verify exact muOS archive downloads for RG35XX H.
+- [ ] Verify KNULLI legacy checksum sidecars against downloaded images.
 - [ ] Build upstream release resolver with signed-source / asset / checksum verification.
 - [ ] Probe RG35XX H RAM variant and panel/PCB revision on physical hardware.
 
@@ -79,6 +83,7 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 A profile is not “bootable” merely because an upstream image exists or a dry-run plan can be generated.
 
 A profile may be marked **validated** only after:
+
 1. correct hardware variant is positively established;
 2. exact image and all boot artefacts are verified;
 3. backup and recovery are tested;

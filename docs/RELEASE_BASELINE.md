@@ -1,52 +1,45 @@
-# Release baseline snapshot
+# Release baseline and retained history
 
-Snapshot date: 2026-11-19. These are research baselines, not live "latest" claims. The release resolver must query upstream and re-check device compatibility before presenting an update.
+Snapshot date: 2026-11-20. These are upstream release records, not a claim that every image is bootable on every RG35XX H board. The resolver must re-check exact device, RAM, panel/PCB, image checksum and boot artefacts before presenting an install action.
 
-| OS | Known stable / supported baseline | Device note |
+## Main systems
+
+| OS | Latest stable baseline in this snapshot | Retained history |
 |---|---|---|
-| muOS | 2606.0 Andromeda | Stable baseline for RG35XX H. User-init integration is post-kernel and asynchronous. |
-| ROCKNIX | 20261101 | Official H700 DDR3 and DDR4 image assets exist; exact RAM asset and DTB are hard requirements. |
-| KNULLI | Scarab 20260511 | Official RG35XX H image; release notes include revised H700 RG XX support. |
-| Anbernic Stock OS | V1.2.4-260526 | Official RG35XX H firmware. Keep as recovery reference. |
-| Stock OS MOD | v4.0.4 (20261025) | Online update, not standalone image. Existing supported MOD base / update chain required. |
-| GarlicOS 2 | v2.0.1 | Official release lists RG35XX H support; retain Stock TF1 dmenu bootloader and matching TF2 init/rootfs. |
-| MinUI | Legacy device package | Repository is archived; resolve the exact RG35XX H package rather than using the generic latest tag. |
-| MinOS | Unverified | No distinct H700 project and boot asset confirmed. Disabled. |
+| muOS | 2606.0 Andromeda | 15 archived release pages indexed; external download asset and checksum resolution remains manual |
+| ROCKNIX | 20261101 | 20261001, 20260901, 20260801, 20260701, 20260601 |
+| KNULLI | Scarab 20260511 | Gladiator II 20250813, Gladiator 20250505, Firefly 20241204, 40 20240721 |
 
-## Verified ROCKNIX 20261101 assets
+The history catalog is intentionally honest about verification state:
 
-The official release page publishes two H700 images with SHA-256:
+- ROCKNIX 20260601–20261001 image assets have release-specific SHA-256 digests from GitHub release metadata. Releases from 202607 onward publish separate DDR3 and DDR4 images; 20260601 has one generic H700 asset and is marked as not RAM-variant-specific.
+- KNULLI legacy entries preserve the exact RG35XX H asset filename and upstream checksum-sidecar filename, but the image digest is not yet locally verified. They require a sidecar comparison or locally calculated SHA-256 before trust.
+- muOS archive pages are indexed separately because downloads are delivered through external provider links. No guessed filenames, direct URLs or checksums are recorded. The archive page is not itself an installable image manifest.
+
+## ROCKNIX 20261101 assets
+
+The official release publishes two H700 images:
 
 - DDR3: ROCKNIX-H700.aarch64-20261101-DDR3.img.gz — 6c5567f5e29a041a1ae1a94c3737c640f5345b77fbaffa4010e8e8ebc6546af1
 - DDR4: ROCKNIX-H700.aarch64-20261101-DDR4.img.gz — 46ec25c30be24fff5f154460f988e53c0311e115fd72ee7b861b55e59c553a07
 
-The correct RG35XX H DTB must also be selected:
+Resolve the DTB from the same release and match the exact board/panel:
 
 - Standard RG35XX H: sun50i-h700-anbernic-rg35xx-h.dtb
 - RG35XX H rev6-panel: sun50i-h700-anbernic-rg35xx-h-rev6-panel.dtb
 
-ROCKNIX's documented procedure copies the selected DTB from the device_trees directory to the system partition root as dtb.img. The board revision must be verified; it must not be guessed.
+Never reuse a DTB across releases without verifying its identity.
 
-## Verified KNULLI Scarab 20260511 asset identity
+## KNULLI boot-chain isolation
 
-The official release lists the RG35XX H image as:
-
-knulli-h700-rg35xx-h-scarab-20260511.img.gz
-
-The release page and image identity are recorded in catalog/releases/knulli/20260511.json. Since a published SHA-256 was not established in this snapshot, Rt:BOOT must calculate and store a local SHA-256 after download before the asset can pass verification.
-
-## Stock OS MOD update chain
-
-The 20261025 v4.0.4 release is an online upgrade. Upstream says its base images are v3.9.9 and documents upgrade paths from older MOD versions. The profile must detect a compatible base installation before any update is offered. It must never flash the v4.0.4 update archive as if it were a complete OS image.
+Scarab and the older Gladiator/Firefly releases use a KNULLI-specific BSP boot stack. Boot0, boot-package, boot.img, env.img and DTB are release-specific. Never mix these with ROCKNIX or another KNULLI release.
 
 ## Official sources
 
-- muOS 2606.0: https://muos.dev/release/current/2606_0
-- ROCKNIX 20261101: https://github.com/ROCKNIX/distribution/releases
-- ROCKNIX H700 DTB guide: https://rocknix.org/docs/configure/h700-installation/
-- KNULLI Scarab: https://github.com/knulli-cfw/knulli-linux/releases/tag/20260511
+- muOS current: https://muos.dev/release/current/2606_0
+- muOS archive: https://muos.dev/release/archive
+- ROCKNIX releases: https://github.com/ROCKNIX/distribution/releases
+- ROCKNIX H700 installation / DTB guide: https://rocknix.org/docs/configure/h700-installation/
+- KNULLI current releases: https://github.com/knulli-cfw/knulli-linux/releases
+- KNULLI legacy releases: https://github.com/knulli-cfw/distribution/releases
 - KNULLI H700 firmware extraction: https://knulli.org/guides/firmware-extraction/h700-firmware-extract/
-- Anbernic Stock OS: https://anbernic.com/en-it/pages/system-update
-- Stock OS MOD 20261025: https://github.com/cbepx-me/Anbernic-H700-RG-xx-StockOS-Modification/releases
-- GarlicOS 2: https://github.com/GarlicOS/buildroot/releases
-- MinUI: https://github.com/shauninman/MinUI

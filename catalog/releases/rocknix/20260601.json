@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "os_id": "rocknix",
+  "tag": "20260601",
+  "channel": "stable",
+  "published_at": "2026-06-01",
+  "source": "https://github.com/ROCKNIX/distribution/releases/tag/20260601",
+  "device_family": "allwinner-h700",
+  "device": "anbernic-rg35xx-h",
+  "assets": [
+    {
+      "filename": "ROCKNIX-H700.aarch64-20260601.img.gz",
+      "ram_variant": "unknown",
+      "size_bytes": 1386582451,
+      "sha256": "f7be634b434c9066b0b24e42c2d15620d66791e0286ed509854bc1820704bf22"
+    }
+  ],
+  "boot_artifacts": [
+    "ROCKNIX H700 image",
+    "DTB resolved from the same release",
+    "device-specific boot partition metadata"
+  ],
+  "dtb_policy": "Resolve the matching RG35XX H or rev6-panel DTB from this exact release. Never silently reuse a DTB from another release.",
+  "installation_model": "full_image",
+  "version_policy": {
+    "follow_latest_compatible": true,
+    "allow_pinning_older": true
+  },
+  "validation": {
+    "checksum_algorithm": "sha256",
+    "checksum_required": true,
+    "device_match_required": true,
+    "ram_variant_required": false,
+    "dtb_match_required": true
+  },
+  "compatibility_state": "catalogued_upstream_not_device_boot_validated"
+}

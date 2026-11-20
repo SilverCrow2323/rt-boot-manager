@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "os_id": "knulli",
+  "tag": "20250813",
+  "channel": "legacy",
+  "name": "KNULLI Gladiator II",
+  "published_at": "2025-08-14",
+  "source": "https://github.com/knulli-cfw/distribution/releases/tag/20250813",
+  "device_family": "allwinner-h700",
+  "device": "anbernic-rg35xx-h",
+  "asset": {
+    "filename": "knulli-h700-rg35xx-h-gladiator-ii-20250813.img.gz",
+    "sha256": null,
+    "sha256_policy": "download_upstream_sidecar_and_verify_or_calculate_local_sha256",
+    "checksum_sidecar": "knulli-h700-rg35xx-h-gladiator-ii-20250813.img.gz.sha256"
+  },
+  "boot_artifacts": [
+    "KNULLI H700 image",
+    "matching release-specific Boot0",
+    "matching release-specific boot-package",
+    "matching release-specific boot.img and env.img",
+    "device-specific DTB"
+  ],
+  "compatibility_state": "legacy_requires_hardware_and_physical_validation",
+  "installation_model": "full_image",
+  "version_policy": {
+    "follow_latest_compatible": false,
+    "allow_pinning_older": true
+  },
+  "validation": {
+    "checksum_required": true,
+    "device_match_required": true,
+    "hardware_revision_required": true,
+    "boot_artifact_set_required": true
+  },
+  "warnings": [
+    "Legacy KNULLI release. The existence of an RG35XX H image does not certify compatibility with every H700 RAM/PCB revision.",
+    "Never mix Boot0, boot-package, boot.img, env.img or DTB between KNULLI releases or other operating systems.",
+    "The image SHA-256 is not yet recorded in this manifest; verify the upstream sidecar against the downloaded image before marking it trusted."
+  ]
+}
