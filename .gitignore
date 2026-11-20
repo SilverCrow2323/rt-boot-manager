@@ -1,0 +1,7 @@
+/dist/
+/ui/sgrub/native/build/
+*.o
+*.a
+*.so
+__pycache__/
+*.py[cod]
