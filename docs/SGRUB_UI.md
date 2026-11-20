@@ -95,6 +95,12 @@ profile, and uses MUOS_STORE_DIR for the SD1/SD2-neutral application path.
 This gives muOS control of SDL environment setup, CPU governor, HOME/XDG and
 foreground-process tracking. The launcher returns normally when SGRUB exits.
 
+For the RG35XX H, muOS's own internal catalogue provides the
+device-specific "muOS-Keys" SDL mapping and separate modern/retro layouts.
+SGRUB requests the modern layout, so its SDL A/B actions follow the selected
+muOS layout instead of relying on a hard-coded raw button order. The runtime
+diagnostic mode can print the mapping actually seen by SDL on the device.
+
 This application launcher is separate from the asynchronous muOS user-init
 hook. Do not enable config/sgrub.enabled for this preview. The user-init
 hook remains inert and is not a safe way to steal the framebuffer from an
