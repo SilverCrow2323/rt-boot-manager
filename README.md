@@ -29,7 +29,7 @@ The Allwinner H700 boot chain is not a PC BIOS/UEFI + GRUB environment. The SoC 
 
 SGRUB therefore has two distinct integration modes:
 
-- **muOS user-init integration:** starts after the muOS Linux kernel is already running. muOS executes user init scripts asynchronously and in the background. This is useful for a post-kernel selector, diagnostics or a controlled reboot hand-off, but it cannot synchronously pause the original kernel boot or load another kernel in-place.
+- **muOS user-init integration:** starts after the muOS Linux kernel is already running. muOS executes user init scripts asynchronously and in the background. It is suitable for diagnostics or a controlled reboot request after a separately validated native adapter, but it cannot pause the original kernel boot or load another kernel in-place. Starting a fullscreen SDL selector from that background hook can race the muOS frontend; the current SGRUB preview is therefore a manually launched muOS application.
 - **Native pre-kernel integration:** a future U-Boot/boot-chain adapter that selects a complete boot profile before its kernel is launched. This is the route required for true kernel-level switching between firmware families such as ROCKNIX and KNULLI.
 
 A separate **rootfs/chroot adapter** may support environments that share the currently running kernel. It must never be presented as a native firmware boot.
