@@ -36,32 +36,24 @@ A separate **rootfs/chroot adapter** may support environments that share the cur
 
 ## Repository map
 
-```text
-.
-├── catalog/
-│   └── os/                 # OS profile manifests and release policy
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── BOOT_CHAIN_H700.md
-│   ├── MUOS_INIT_INTEGRATION.md
-│   ├── OS_COMPATIBILITY.md
-│   └── SAFETY_AND_RECOVERY.md
-├── schema/
-│   └── os-profile.schema.json
-├── src/rtbm/               # Read-only profile, device, planner and SGRUB state
-├── ui/sgrub/native/         # SDL2 640x480 profile-browser frontend
-├── tests/                  # Host-side contract tests
-├── tools/
-│   └── rtbm.py             # Read-only CLI
-├── tools/
-│   ├── rtbm.py              # Read-only CLI
-│   ├── generate_sgrub_profiles.py
-│   └── package_muos_sgrub.sh
-└── integrations/muos/
-    ├── 99-rtbm-sgrub.sh    # Inert user-init bridge (not a pre-kernel bootloader)
-    └── application/RTBM-SGRUB/mux_launch.sh
+    .
+    ├── catalog/os/            # Canonical OS profile manifests
+    ├── catalog/releases/       # Verified release metadata
+    ├── config/                 # Example manager configuration
+    ├── docs/                   # Architecture, safety, hardware and UI docs
+    ├── schema/                 # Profile schema
+    ├── src/rtbm/               # Read-only core and menu state
+    ├── ui/sgrub/native/         # SDL2 640x480 graphical frontend
+    ├── tests/                  # Host-side contract tests
+    ├── tools/
+    │   ├── rtbm.py             # Read-only CLI
+    │   ├── generate_sgrub_profiles.py
+    │   └── package_muos_sgrub.sh
+    └── integrations/muos/
+        ├── 99-rtbm-sgrub.sh    # Inert user-init bridge
+        └── application/RTBM-SGRUB/mux_launch.sh
 
-```
+See docs/SGRUB_UI.md for native build and muOS preview packaging instructions.
 
 ## First target
 
