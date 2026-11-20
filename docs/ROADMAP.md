@@ -30,16 +30,21 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Implement renderer-independent controller/menu state.
 - [x] Put muOS, ROCKNIX and KNULLI first.
 - [x] Implement selection, confirm, cancel, default profile and timeout state.
-- [ ] Build the 640x480 graphical renderer and SPDW visual assets.
+- [x] Build the first 640x480 SDL2 graphical profile-browser renderer.
+- [x] Generate native SGRUB profile data from the canonical OS catalogue.
+- [x] Add a muOS application archive builder for the profile-browser preview.
+- [ ] Refine the SPDW visual system and add release/version selection screens.
 - [ ] Add version picker, release channel, compatibility explanation and per-OS update pinning.
 - [ ] Add status / diagnostics / recovery screens.
-- [ ] Test framebuffer, controller mapping and safe hand-off on RG35XX H.
+- [ ] Test framebuffer, controller mapping and clean return to muOS on RG35XX H.
+- [ ] Implement and validate a real boot adapter before enabling any boot action.
 
 ## M3 — muOS integration
 
 - [x] Add an inert, opt-in muOS user-init hook scaffold.
 - [x] Require the user to enable muOS User Init Scripts and a separate SGRUB marker.
-- [ ] Implement tested display/input hand-off for the post-kernel selector.
+- [x] Provide a separate manually launched muOS SDL2 application preview.
+- [ ] Implement tested display/input hand-off for a post-kernel selector.
 - [ ] Implement controlled reboot request after a native boot entry has been separately validated.
 - [ ] Package a reversible muOS integration installer and removal path.
 
