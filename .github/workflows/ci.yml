@@ -17,6 +17,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install SDL2 development files
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+      - name: Validate generated SGRUB profiles
+        run: python3 tools/generate_sgrub_profiles.py --check
+      - name: Build native SGRUB frontend
+        run: |
+          make -C ui/sgrub/native clean all
+          ui/sgrub/native/build/sgrub --self-test
       - name: Validate OS profile catalogue
         run: python3 tools/rtbm.py validate
       - name: Run unit tests
@@ -26,8 +34,11 @@ jobs:
           python3 tools/rtbm.py list
           python3 tools/rtbm.py probe --root /
           python3 tools/rtbm.py plan rocknix --device anbernic-rg35xx-h --ram unknown --panel unknown --dry-run
-      - name: Validate muOS hook syntax
-        run: sh -n integrations/muos/99-rtbm-sgrub.sh
+      - name: Validate muOS launcher and packaging syntax
+        run: |
+          sh -n integrations/muos/99-rtbm-sgrub.sh
+          sh -n integrations/muos/application/RTBM-SGRUB/mux_launch.sh
+          sh -n tools/package_muos_sgrub.sh
       - name: Assert no write-capable profile
         run: |
           python3 - <<'PY'
