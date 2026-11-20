@@ -115,3 +115,10 @@ already-running frontend.
 - Test only as a normal application; do not install it as an early boot hook.
 
 Passing the host build and UI self-test does not certify the device runtime.
+
+## muOS integration references
+
+- [Application Runner FAQ](https://community.muos.dev/t/application-runner/1282)
+- [muOS application setup helpers](https://github.com/MustardOS/internal/blob/main/script/var/retro.sh)
+- [muOS SDL environment and modern/retro mapping selection](https://github.com/MustardOS/internal/blob/main/script/var/display.sh)
+- [RG35XX H modern SDL controller map](https://github.com/MustardOS/internal/blob/main/device/rg35xx-h/control/gamecontrollerdb/modern.txt)
