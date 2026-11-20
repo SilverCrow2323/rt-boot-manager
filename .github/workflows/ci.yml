@@ -6,6 +6,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Keep only the newest validation run for a branch; rapid development pushes
+# should not leave many identical SDL package installs queued behind each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
