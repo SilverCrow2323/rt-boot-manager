@@ -27,12 +27,34 @@ typedef struct {
     bool requires_dtb;
 } SgrubProfile;
 
+typedef struct {
+    const char *os_id;
+    const char *tag;
+    const char *label;
+    const char *channel;
+    const char *verification;
+    const char *assets;
+    bool is_current;
+    bool checksum_available;
+    bool requires_known_ram;
+    bool requires_dtb;
+} SgrubRelease;
+
 #include "profiles.generated.h"
+
+typedef enum {
+    SCREEN_PROFILES,
+    SCREEN_DETAILS,
+    SCREEN_RELEASES
+} UiScreen;
 
 typedef struct {
     int selected;
     int default_index;
-    bool details;
+    UiScreen screen;
+    int release_selected;
+    int release_scroll;
+    int pinned_release[SGRUB_PROFILE_COUNT];
     bool running;
     bool input_dump;
     char last_input[40];
@@ -212,6 +234,107 @@ static void draw_header(SDL_Renderer *renderer)
     hline(renderer, 28, 612, 82, C_LINE);
 }
 
+static int profile_release_count(int profile_index)
+{
+    int count = 0;
+    const char *profile_id = SGRUB_PROFILES[profile_index].id;
+    for (size_t i = 0; i < SGRUB_RELEASE_COUNT; ++i) {
+        if (strcmp(SGRUB_RELEASES[i].os_id, profile_id) == 0) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+static int profile_release_at(int profile_index, int ordinal)
+{
+    int current = 0;
+    const char *profile_id = SGRUB_PROFILES[profile_index].id;
+    for (size_t i = 0; i < SGRUB_RELEASE_COUNT; ++i) {
+        if (strcmp(SGRUB_RELEASES[i].os_id, profile_id) == 0) {
+            if (current == ordinal) {
+                return (int)i;
+            }
+            ++current;
+        }
+    }
+    return -1;
+}
+
+static int current_release_for_profile(int profile_index)
+{
+    const char *profile_id = SGRUB_PROFILES[profile_index].id;
+    for (size_t i = 0; i < SGRUB_RELEASE_COUNT; ++i) {
+        if (strcmp(SGRUB_RELEASES[i].os_id, profile_id) == 0 &&
+            SGRUB_RELEASES[i].is_current) {
+            return (int)i;
+        }
+    }
+    return profile_release_at(profile_index, 0);
+}
+
+static const char *profile_version_label(const UiState *state, int profile_index)
+{
+    int pinned = state->pinned_release[profile_index];
+    if (pinned >= 0 && pinned < (int)SGRUB_RELEASE_COUNT &&
+        strcmp(SGRUB_RELEASES[pinned].os_id, SGRUB_PROFILES[profile_index].id) == 0) {
+        return SGRUB_RELEASES[pinned].tag;
+    }
+    return SGRUB_PROFILES[profile_index].version;
+}
+
+static void open_release_browser(UiState *state)
+{
+    int pinned = state->pinned_release[state->selected];
+    if (pinned >= 0 && pinned < (int)SGRUB_RELEASE_COUNT &&
+        strcmp(SGRUB_RELEASES[pinned].os_id, SGRUB_PROFILES[state->selected].id) == 0) {
+        state->release_selected = pinned;
+    } else {
+        state->release_selected = current_release_for_profile(state->selected);
+    }
+    if (state->release_selected < 0) {
+        state->release_selected = profile_release_at(state->selected, 0);
+    }
+    state->release_scroll = 0;
+    state->screen = SCREEN_RELEASES;
+}
+
+static void move_release_selection(UiState *state, int delta)
+{
+    int count = profile_release_count(state->selected);
+    if (count <= 0) {
+        return;
+    }
+
+    int ordinal = 0;
+    int found = false;
+    for (int i = 0; i < count; ++i) {
+        int index = profile_release_at(state->selected, i);
+        if (index == state->release_selected) {
+            ordinal = i;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        ordinal = 0;
+    }
+    ordinal = (ordinal + delta + count) % count;
+    state->release_selected = profile_release_at(state->selected, ordinal);
+    if (ordinal < state->release_scroll) {
+        state->release_scroll = ordinal;
+    } else if (ordinal >= state->release_scroll + 5) {
+        state->release_scroll = ordinal - 4;
+    }
+}
+
+static void reset_release_pin(UiState *state)
+{
+    state->pinned_release[state->selected] = -1;
+    state->release_selected = current_release_for_profile(state->selected);
+    state->release_scroll = 0;
+}
+
 static void draw_profile_card(SDL_Renderer *renderer, int index, int y,
                               const UiState *state)
 {
@@ -228,7 +351,7 @@ static void draw_profile_card(SDL_Renderer *renderer, int index, int y,
     }
     draw_text(renderer, 54, y + 34, profile->id, 2, selected ? C_ACCENT : C_CYAN);
     draw_text(renderer, 102, y + 19, profile->name, 2, C_TEXT);
-    draw_text(renderer, 102, y + 49, profile->version, 1, C_MUTED);
+    draw_text(renderer, 102, y + 49, profile_version_label(state, index), 1, C_MUTED);
 
     if (is_default) {
         draw_chip(renderer, 310, y + 16, 76, "DEFAULT", C_ACCENT, C_BG);
@@ -251,7 +374,10 @@ static void draw_selected_panel(SDL_Renderer *renderer, const UiState *state,
     hline(renderer, 430, 596, 185, C_LINE);
 
     draw_text(renderer, 430, 201, "RELEASE", 1, C_MUTED);
-    draw_text(renderer, 430, 215, profile->version, 1, C_TEXT);
+    draw_text(renderer, 430, 215, profile_version_label(state, state->selected), 1, C_TEXT);
+    if (state->pinned_release[state->selected] >= 0) {
+        draw_text(renderer, 430, 230, "SESSION PIN", 1, C_ACCENT);
+    }
 
     draw_text(renderer, 430, 244, "BOOT PATH", 1, C_MUTED);
     draw_text(renderer, 430, 258, profile->boot_mode, 1, C_TEXT);
@@ -276,7 +402,10 @@ static void draw_detail_screen(SDL_Renderer *renderer, const UiState *state,
     draw_text(renderer, 50, 132, "PROFILE DETAILS", 1, C_CYAN);
     draw_text(renderer, 50, 160, profile->name, 3, C_TEXT);
     draw_text(renderer, 50, 205, "VERSION", 1, C_MUTED);
-    draw_text(renderer, 50, 222, profile->version, 2, C_ACCENT);
+    draw_text(renderer, 50, 222, profile_version_label(state, state->selected), 2, C_ACCENT);
+    draw_text(renderer, 50, 243,
+              state->pinned_release[state->selected] >= 0 ? "SESSION PIN ONLY" : "BASELINE VERSION",
+              1, state->pinned_release[state->selected] >= 0 ? C_ACCENT : C_MUTED);
 
     draw_text(renderer, 50, 266, "BOOT PATH", 1, C_MUTED);
     draw_text(renderer, 50, 283, profile->boot_mode, 2, C_TEXT);
@@ -294,22 +423,98 @@ static void draw_detail_screen(SDL_Renderer *renderer, const UiState *state,
     draw_text(renderer, 368, 330,
               controller_connected ? "PAD CONNECTED" : "KEYBOARD READY",
               1, C_CYAN);
-    draw_text(renderer, 50, 343, "THIS BUILD DOES NOT CHANGE BOOT STATE.", 1, C_MUTED);
+    draw_text(renderer, 50, 343, "A OPENS THE RELEASE HISTORY.", 1, C_CYAN);
+    draw_text(renderer, 50, 360, "PINNING LASTS FOR THIS SESSION ONLY.", 1, C_MUTED);
+}
+
+static void draw_release_screen(SDL_Renderer *renderer, const UiState *state)
+{
+    const SgrubProfile *profile = &SGRUB_PROFILES[state->selected];
+    int count = profile_release_count(state->selected);
+    int selected_ordinal = 0;
+    for (int i = 0; i < count; ++i) {
+        if (profile_release_at(state->selected, i) == state->release_selected) {
+            selected_ordinal = i;
+            break;
+        }
+    }
+
+    draw_text(renderer, 28, 101, "VERSION HISTORY", 1, C_MUTED);
+    draw_chip(renderer, 492, 95, 120, profile->id, C_PANEL_HI, C_CYAN);
+
+    for (int row = 0; row < 5; ++row) {
+        int ordinal = state->release_scroll + row;
+        int index = profile_release_at(state->selected, ordinal);
+        if (index < 0) {
+            break;
+        }
+        const SgrubRelease *release = &SGRUB_RELEASES[index];
+        bool selected = index == state->release_selected;
+        bool pinned = state->pinned_release[state->selected] == index;
+        int y = 120 + row * 54;
+        rect(renderer, 28, y, 370, 48, selected ? C_PANEL_HI : C_PANEL);
+        outline(renderer, 28, y, 370, 48, selected ? C_ACCENT : C_LINE);
+        rect(renderer, 39, y + 8, 3, 32, selected ? C_ACCENT : C_LINE);
+        draw_text(renderer, 52, y + 7, release->label, 1, selected ? C_TEXT : C_MUTED);
+        draw_text(renderer, 52, y + 25, release->tag, 1, C_CYAN);
+        if (pinned) {
+            draw_chip(renderer, 310, y + 14, 78, "PINNED", C_ACCENT, C_BG);
+        } else if (release->is_current) {
+            draw_chip(renderer, 310, y + 14, 78, "CURRENT", C_PANEL_2, C_CYAN);
+        } else if (release->channel[0] == 'L') {
+            draw_chip(renderer, 310, y + 14, 78, "LEGACY", C_PANEL_2, C_ORANGE);
+        }
+    }
+
+    rect(renderer, 414, 120, 198, 278, C_PANEL);
+    outline(renderer, 414, 120, 198, 278, C_LINE);
+    if (state->release_selected >= 0 &&
+        state->release_selected < (int)SGRUB_RELEASE_COUNT) {
+        const SgrubRelease *release = &SGRUB_RELEASES[state->release_selected];
+        draw_text(renderer, 430, 137, "RELEASE INFO", 1, C_CYAN);
+        draw_text(renderer, 430, 160, release->tag, 2, C_TEXT);
+        draw_text(renderer, 430, 185, release->label, 1, C_MUTED);
+        hline(renderer, 430, 596, 202, C_LINE);
+        draw_text(renderer, 430, 216, "CHANNEL", 1, C_MUTED);
+        draw_text(renderer, 430, 230, release->channel, 1, C_TEXT);
+        draw_text(renderer, 430, 253, "ASSET PROFILE", 1, C_MUTED);
+        draw_text(renderer, 430, 267, release->assets, 1, C_TEXT);
+        draw_text(renderer, 430, 290, "INTEGRITY", 1, C_MUTED);
+        draw_text(renderer, 430, 304, release->verification, 1,
+                  release->checksum_available ? C_CYAN : C_ORANGE);
+        draw_text(renderer, 430, 337, "HARDWARE GATE", 1, C_MUTED);
+        draw_text(renderer, 430, 351,
+                  release->requires_known_ram ? "RAM + DTB CHECK" :
+                  (release->requires_dtb ? "DTB CHECK" : "BOARD CHECK"),
+                  1, C_ORANGE);
+        draw_text(renderer, 430, 376,
+                  release->is_current ? "UPSTREAM BASELINE" : "HISTORICAL BUILD",
+                  1, release->is_current ? C_CYAN : C_MUTED);
+    }
+
+    (void)selected_ordinal;
+    draw_text(renderer, 28, 398, "NO DOWNLOAD OR INSTALL ACTION IN THIS BUILD.", 1, C_RED);
 }
 
 static void draw_footer(SDL_Renderer *renderer, const UiState *state)
 {
     hline(renderer, 28, 612, 420, C_LINE);
-    if (state->details) {
-        draw_text(renderer, 30, 441, "A OR B  BACK TO PROFILES", 1, C_TEXT);
-        draw_text(renderer, 333, 441, "Y  SET SESSION DEFAULT", 1, C_ACCENT);
+    if (state->screen == SCREEN_DETAILS) {
+        draw_text(renderer, 30, 441, "A  RELEASES", 1, C_CYAN);
+        draw_text(renderer, 190, 441, "B  PROFILES", 1, C_TEXT);
+        draw_text(renderer, 352, 441, "Y  SET DEFAULT OS", 1, C_ACCENT);
+    } else if (state->screen == SCREEN_RELEASES) {
+        draw_text(renderer, 30, 441, "DPAD  BROWSE", 1, C_TEXT);
+        draw_text(renderer, 190, 441, "A  PIN SESSION", 1, C_ACCENT);
+        draw_text(renderer, 385, 441, "B  BACK", 1, C_TEXT);
+        draw_text(renderer, 490, 461, "Y  RESET PIN", 1, C_ORANGE);
     } else {
         draw_text(renderer, 30, 441, "DPAD  MOVE", 1, C_TEXT);
         draw_text(renderer, 160, 441, "A  DETAILS", 1, C_CYAN);
         draw_text(renderer, 292, 441, "B  EXIT", 1, C_TEXT);
         draw_text(renderer, 398, 441, "Y  SET DEFAULT", 1, C_ACCENT);
     }
-    draw_text(renderer, 30, 461, "NO AUTOSTART  /  NO STORAGE WRITES  /  NO BOOTLOADER CHANGES",
+    draw_text(renderer, 30, 461, "PREVIEW ONLY  /  NO STORAGE WRITES  /  NO BOOTLOADER CHANGES",
               1, C_MUTED);
     if (state->input_dump && state->last_input[0] != '\0') {
         draw_text(renderer, 455, 461, state->last_input, 1, C_ORANGE);
@@ -322,7 +527,9 @@ static void render(SDL_Renderer *renderer, const UiState *state,
     rect(renderer, 0, 0, SCREEN_W, SCREEN_H, C_BG);
     draw_header(renderer);
 
-    if (state->details) {
+    if (state->screen == SCREEN_RELEASES) {
+        draw_release_screen(renderer, state);
+    } else if (state->screen == SCREEN_DETAILS) {
         draw_detail_screen(renderer, state, controller_connected);
     } else {
         draw_text(renderer, 28, 101, "SYSTEM PROFILES", 1, C_MUTED);
@@ -341,12 +548,31 @@ static void render(SDL_Renderer *renderer, const UiState *state,
 
 static void act(UiState *state, enum Action action)
 {
-    if (state->details) {
-        if (action == ACTION_ACCEPT || action == ACTION_BACK) {
-            state->details = false;
+    if (state->screen == SCREEN_RELEASES) {
+        if (action == ACTION_UP || action == ACTION_LEFT) {
+            move_release_selection(state, -1);
+        } else if (action == ACTION_DOWN || action == ACTION_RIGHT) {
+            move_release_selection(state, 1);
+        } else if (action == ACTION_ACCEPT) {
+            if (state->release_selected >= 0) {
+                state->pinned_release[state->selected] = state->release_selected;
+            }
+            state->screen = SCREEN_DETAILS;
+        } else if (action == ACTION_BACK) {
+            state->screen = SCREEN_DETAILS;
+        } else if (action == ACTION_DEFAULT) {
+            reset_release_pin(state);
+        }
+        return;
+    }
+
+    if (state->screen == SCREEN_DETAILS) {
+        if (action == ACTION_ACCEPT) {
+            open_release_browser(state);
+        } else if (action == ACTION_BACK) {
+            state->screen = SCREEN_PROFILES;
         } else if (action == ACTION_DEFAULT) {
             state->default_index = state->selected;
-            state->details = false;
         }
         return;
     }
@@ -362,7 +588,7 @@ static void act(UiState *state, enum Action action)
         state->selected = (state->selected + 1) % (int)SGRUB_PROFILE_COUNT;
         break;
     case ACTION_ACCEPT:
-        state->details = true;
+        state->screen = SCREEN_DETAILS;
         break;
     case ACTION_BACK:
         state->running = false;
@@ -537,7 +763,7 @@ int main(int argc, char **argv)
     SDL_Renderer *renderer = NULL;
     SDL_GameController *controller = NULL;
     SDL_Joystick *raw_joystick = NULL;
-    UiState state = {0, 0, false, true, false, {0}};
+    UiState state = {0};
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--fullscreen") == 0) {
@@ -553,11 +779,16 @@ int main(int argc, char **argv)
             }
             mapping_file = argv[++i];
         } else if (strcmp(argv[i], "--self-test") == 0) {
-            (void)printf("SGRUB self-test: %lu profiles\n",
-                         (unsigned long)SGRUB_PROFILE_COUNT);
+            (void)printf("SGRUB self-test: %lu profiles, %lu releases\n",
+                         (unsigned long)SGRUB_PROFILE_COUNT,
+                         (unsigned long)SGRUB_RELEASE_COUNT);
             for (size_t p = 0; p < SGRUB_PROFILE_COUNT; ++p) {
                 (void)printf("%s\t%s\t%s\n", SGRUB_PROFILES[p].id,
                              SGRUB_PROFILES[p].name, SGRUB_PROFILES[p].version);
+            }
+            for (size_t r = 0; r < SGRUB_RELEASE_COUNT; ++r) {
+                (void)printf("RELEASE\t%s\t%s\t%s\n", SGRUB_RELEASES[r].os_id,
+                             SGRUB_RELEASES[r].tag, SGRUB_RELEASES[r].verification);
             }
             return 0;
         } else if (strcmp(argv[i], "--version") == 0) {
@@ -572,7 +803,12 @@ int main(int argc, char **argv)
             return 2;
         }
     }
+    state.running = true;
+    state.screen = SCREEN_PROFILES;
     state.input_dump = input_dump;
+    for (size_t p = 0; p < SGRUB_PROFILE_COUNT; ++p) {
+        state.pinned_release[p] = -1;
+    }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER |
                  SDL_INIT_JOYSTICK | SDL_INIT_EVENTS) != 0) {

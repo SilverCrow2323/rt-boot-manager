@@ -30,7 +30,8 @@ jobs:
       - name: Build native SGRUB frontend
         run: |
           make -C ui/sgrub/native clean all
-          ui/sgrub/native/build/sgrub --self-test
+          ui/sgrub/native/build/sgrub --self-test | tee /tmp/sgrub-self-test.txt
+          grep -q "3 profiles, 27 releases" /tmp/sgrub-self-test.txt
       - name: Validate OS profile catalogue
         run: python3 tools/rtbm.py validate
       - name: Run unit tests

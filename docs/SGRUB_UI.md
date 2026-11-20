@@ -17,8 +17,18 @@ The current build is deliberately a PROFILE-BROWSER PREVIEW:
 - A / Enter opens the selected profile details.
 - B / Escape returns or exits to the muOS application launcher.
 - Y sets the default profile for the current application session only.
-- The UI shows hardware checks and boot path information from the catalogue.
-- No timeout-based autoboot is enabled.
+- A opens the release-history browser for the selected OS.
+- The release browser reads the canonical release manifests and the separate muOS archive index.
+- Release rows distinguish current baselines, stable history, legacy builds, checksum availability and hardware gates.
+- A pins a release for the current SGRUB session; Y clears that pin and restores the current baseline.
+- Session pins are memory-only: they are not written to the SD card or persisted after exit.
+- muOS archive entries are shown as provider-link-only metadata until the exact device image and checksum are resolved.
+- KNULLI legacy entries remain marked for checksum and hardware verification.
+- No download, install, kernel switch, reboot or timeout-based autoboot is enabled.
+
+The release browser is a read-only catalogue view. A session pin changes only
+the version label shown by the preview; it does not download an image, install
+a release, persist a pin or change the boot profile.
 
 The status BOOT HANDOFF: NOT CONNECTED is intentional. Selecting a profile
 does not start another kernel, request a reboot, alter the boot configuration

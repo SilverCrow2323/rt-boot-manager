@@ -38,7 +38,8 @@ A separate **rootfs/chroot adapter** may support environments that share the cur
 
     .
     ├── catalog/os/            # Canonical OS profile manifests
-    ├── catalog/releases/       # Verified release metadata
+    ├── catalog/releases/       # Release manifests and checksums
+    ├── catalog/release-history/ # Archived provider/history indexes
     ├── config/                 # Example manager configuration
     ├── docs/                   # Architecture, safety, hardware and UI docs
     ├── schema/                 # Profile schema
@@ -74,12 +75,15 @@ hardware recovery path have been validated.
 
 ## Read-only CLI
 
-The initial CLI is deliberately non-destructive:
+The initial CLI is deliberately non-destructive. The release browser and CLI
+list release metadata only; they do not download or install operating systems:
 
 ```sh
 python3 tools/rtbm.py list
 python3 tools/rtbm.py probe
 python3 tools/rtbm.py validate
+python3 tools/rtbm.py releases
+python3 tools/rtbm.py releases --os rocknix
 python3 tools/rtbm.py plan rocknix --device rg35xx-h --ram unknown --dry-run
 ```
 

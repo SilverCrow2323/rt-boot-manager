@@ -9,4 +9,35 @@ static const SgrubProfile SGRUB_PROFILES[] = {
 };
 #define SGRUB_PROFILE_COUNT (sizeof(SGRUB_PROFILES) / sizeof(SGRUB_PROFILES[0]))
 
+static const SgrubRelease SGRUB_RELEASES[] = {
+    {"muos", "2606.0", "Andromeda", "STABLE", "BASELINE ONLY", "MUOS IMAGE", true, false, false, true},
+    {"muos", "2601.1", "Funky Jacaranda", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2601.0", "Jacaranda", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2508.4", "Loose Goose", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2508.3", "Golden Goose", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2508.2", "Silly Goose", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2508.1", "Canada Goose", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2508.0", "Goose", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2502.0", "Pixie", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2410.3", "AW Banana", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2410.2", "Big Banana", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2410.1", "Banana", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2405.2", "Baked Beans", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2405.1", "Refried Beans", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2405.0", "Beans", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"muos", "2403.0", "Origin", "LEGACY", "ARCHIVE ONLY", "PROVIDER LINK", false, false, false, true},
+    {"rocknix", "20261101", "20261101", "STABLE", "SHA256 AVAILABLE", "DDR3 OR DDR4", true, true, true, true},
+    {"rocknix", "20261001", "20261001", "STABLE", "SHA256 AVAILABLE", "DDR3 OR DDR4", false, true, true, true},
+    {"rocknix", "20260901", "20260901", "STABLE", "SHA256 AVAILABLE", "DDR3 OR DDR4", false, true, true, true},
+    {"rocknix", "20260801", "20260801", "STABLE", "SHA256 AVAILABLE", "DDR3 OR DDR4", false, true, true, true},
+    {"rocknix", "20260701", "20260701", "STABLE", "SHA256 AVAILABLE", "DDR3 OR DDR4", false, true, true, true},
+    {"rocknix", "20260601", "20260601", "STABLE", "SHA256 AVAILABLE", "GENERIC H700", false, true, true, true},
+    {"knulli", "20260511", "Scarab", "STABLE", "VERIFY SHA256", "KNULLI BSP", true, false, true, true},
+    {"knulli", "20250813", "Gladiator II", "LEGACY", "VERIFY SHA256", "KNULLI BSP", false, false, true, true},
+    {"knulli", "20250505", "Gladiator", "LEGACY", "VERIFY SHA256", "KNULLI BSP", false, false, true, true},
+    {"knulli", "20241204", "Firefly", "LEGACY", "VERIFY SHA256", "KNULLI BSP", false, false, true, true},
+    {"knulli", "20240721", "40", "LEGACY", "VERIFY SHA256", "KNULLI BSP", false, false, true, true},
+};
+#define SGRUB_RELEASE_COUNT (sizeof(SGRUB_RELEASES) / sizeof(SGRUB_RELEASES[0]))
+
 #endif

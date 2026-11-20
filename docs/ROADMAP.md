@@ -24,6 +24,7 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Retain five earlier ROCKNIX H700 releases with release-specific asset checksums.
 - [x] Retain four legacy KNULLI RG35XX H release records with explicit checksum-verification requirements.
 - [x] Index the 15 archived muOS releases without inventing provider URLs, image filenames or checksums.
+- [x] Generate one native release table from stable manifests and separate history indexes.
 - [ ] Resolve and verify exact muOS archive downloads for RG35XX H.
 - [ ] Verify KNULLI legacy checksum sidecars against downloaded images.
 - [ ] Build upstream release resolver with signed-source / asset / checksum verification.
@@ -38,8 +39,11 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Generate native SGRUB profile data from the canonical OS catalogue.
 - [x] Add a muOS application archive builder for the profile-browser preview.
 - [x] Add optional SDL controller database loading and input diagnostics.
-- [ ] Refine the SPDW visual system and add release/version selection screens.
-- [ ] Add version picker, release channel, compatibility explanation and per-OS update pinning.
+- [x] Add a native read-only release-history/version screen for muOS, ROCKNIX and KNULLI.
+- [x] Add session-only release pin selection and reset controls.
+- [ ] Persist per-OS release pins and connect them to validated installation plans.
+- [ ] Refine the SPDW visual system and release detail presentation.
+- [ ] Add compatibility-aware update selection after physical hardware detection.
 - [ ] Add status / diagnostics / recovery screens.
 - [ ] Test framebuffer, controller mapping and clean return to muOS on RG35XX H.
 - [ ] Implement and validate a real boot adapter before enabling any boot action.
