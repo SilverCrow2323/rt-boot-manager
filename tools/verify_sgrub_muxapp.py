@@ -38,9 +38,11 @@ def verify(path: str) -> Dict[str, object]:
         names = [info.filename for info in infos]
         if len(names) != len(set(names)):
             raise PackageError("duplicate ZIP paths are not allowed")
-        if set(names) != EXPECTED:
-            missing = sorted(EXPECTED - set(names))
-            extra = sorted(set(names) - EXPECTED)
+        file_names = {info.filename for info in infos if not info.is_dir()}
+        directory_names = {info.filename for info in infos if info.is_dir()}
+        if file_names != EXPECTED or directory_names - {"RTBM-SGRUB/"}:
+            missing = sorted(EXPECTED - file_names)
+            extra = sorted((file_names - EXPECTED) | (directory_names - {"RTBM-SGRUB/"}))
             raise PackageError("unexpected package contents (missing=%r extra=%r)" % (missing, extra))
 
         for info in infos:
