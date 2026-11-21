@@ -68,8 +68,12 @@ def verify(path: str) -> Dict[str, object]:
             raise PackageError("sgrub is not a plausible ELF executable")
         if not launcher.startswith(b"#!/bin/sh"):
             raise PackageError("muOS launcher must be a POSIX shell script")
-        if b"zip" not in launcher and b"exec" not in launcher:
-            raise PackageError("muOS launcher is missing its execution hand-off")
+        if (
+            b"SETUP_APP" not in launcher
+            or b"APP_DIRECTORY" not in launcher
+            or b"./$APP_BIN" not in launcher
+        ):
+            raise PackageError("muOS launcher is missing the expected muOS application hand-off")
         missing_safety = [item.decode("ascii") for item in SAFETY_TEXT if item not in readme]
         if missing_safety:
             raise PackageError("preview safety notice is incomplete: %s" % ", ".join(missing_safety))
