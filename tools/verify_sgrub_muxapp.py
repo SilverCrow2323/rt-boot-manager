@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Verify the safety boundary and structure of an RTBM SGRUB .muxapp preview."""
+"""Verify an RTBM SGRUB .muxapp is safe and contains an ARM64 muOS executable."""
 
 from __future__ import annotations
 
 import argparse
+import re
 import stat
+import struct
 import sys
 import zipfile
 from pathlib import PurePosixPath
@@ -21,10 +23,55 @@ SAFETY_TEXT = (
     b"does not write partitions",
     b"NOT CONNECTED",
 )
+ELF64_HEADER = struct.Struct("<16sHHIQQQIHHHHHH")
+ELFCLASS64 = 2
+ELFDATA2LSB = 1
+ET_EXEC = 2
+ET_DYN = 3
+EM_AARCH64 = 183
 
 
 class PackageError(ValueError):
     """The archive is malformed or violates the preview-only safety contract."""
+
+
+def verify_arm64_elf(data: bytes) -> Dict[str, int]:
+    if len(data) < ELF64_HEADER.size:
+        raise PackageError("SGRUB binary is shorter than an ELF64 header")
+
+    (
+        ident, elf_type, machine, version, entry, phoff, shoff, _flags,
+        ehsize, phentsize, phnum, shentsize, shnum, _shstrndx,
+    ) = ELF64_HEADER.unpack_from(data)
+
+    if ident[:4] != b"\x7fELF":
+        raise PackageError("SGRUB binary is missing ELF magic")
+    if ident[4] != ELFCLASS64:
+        raise PackageError("SGRUB must be ELF64; a 32-bit or x86 binary is not valid for H700")
+    if ident[5] != ELFDATA2LSB:
+        raise PackageError("SGRUB must be little-endian")
+    if ident[6] != 1 or version != 1:
+        raise PackageError("unsupported ELF version")
+    if machine != EM_AARCH64:
+        raise PackageError("SGRUB target must be EM_AARCH64 (H700); got machine %d" % machine)
+    if elf_type not in {ET_EXEC, ET_DYN}:
+        raise PackageError("SGRUB must be an executable ELF or PIE")
+    if ehsize < ELF64_HEADER.size or ehsize > len(data):
+        raise PackageError("invalid ELF64 header size")
+    if entry == 0:
+        raise PackageError("ELF entry point is zero")
+    if phnum == 0 or phentsize < 56 or phoff + phentsize * phnum > len(data):
+        raise PackageError("ELF64 program header table is missing or truncated")
+    if shnum and (shentsize < 64 or shoff + shentsize * shnum > len(data)):
+        raise PackageError("ELF64 section header table is truncated")
+
+    return {
+        "elf_bytes": len(data),
+        "entry": entry,
+        "machine": machine,
+        "program_headers": phnum,
+        "type": elf_type,
+    }
 
 
 def verify(path: str) -> Dict[str, object]:
@@ -63,9 +110,8 @@ def verify(path: str) -> Dict[str, object]:
         binary = payload["RTBM-SGRUB/sgrub"]
         launcher = payload["RTBM-SGRUB/mux_launch.sh"]
         readme = payload["RTBM-SGRUB/README.txt"]
+        elf = verify_arm64_elf(binary)
 
-        if len(binary) < 64 or not binary.startswith(b"\x7fELF"):
-            raise PackageError("sgrub is not a plausible ELF executable")
         if not launcher.startswith(b"#!/bin/sh"):
             raise PackageError("muOS launcher must be a POSIX shell script")
         if (
@@ -84,7 +130,13 @@ def verify(path: str) -> Dict[str, object]:
             if not mode & stat.S_IXUSR:
                 raise PackageError("executable bit is missing: %s" % executable)
 
-    return {"members": len(EXPECTED), "binary_bytes": len(binary), "launcher_bytes": len(launcher)}
+    return {
+        "members": len(EXPECTED),
+        "binary_bytes": len(binary),
+        "launcher_bytes": len(launcher),
+        "architecture": "AArch64",
+        "elf_entry": elf["entry"],
+    }
 
 
 def main() -> int:
@@ -97,8 +149,8 @@ def main() -> int:
         print("SGRUB package verification: ERROR: %s" % exc, file=sys.stderr)
         return 1
     print(
-        "SGRUB package verification: OK (%d members; ELF %d bytes; launcher %d bytes; preview-only safety notice present)"
-        % (result["members"], result["binary_bytes"], result["launcher_bytes"])
+        "SGRUB package verification: OK (%d members; AArch64 ELF %d bytes; entry 0x%x; launcher %d bytes; preview-only safety notice present)"
+        % (result["members"], result["binary_bytes"], result["elf_entry"], result["launcher_bytes"])
     )
     return 0
 
