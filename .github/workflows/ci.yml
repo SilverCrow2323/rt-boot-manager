@@ -46,6 +46,19 @@ jobs:
           sh -n integrations/muos/99-rtbm-sgrub.sh
           sh -n integrations/muos/application/RTBM-SGRUB/mux_launch.sh
           sh -n tools/package_muos_sgrub.sh
+      - name: Assemble and verify the inert muOS preview package
+        run: |
+          sh tools/package_muos_sgrub.sh
+          python3 tools/verify_sgrub_muxapp.py dist/rtbm-sgrub.muxapp
+          sha256sum dist/rtbm-sgrub.muxapp
+      - name: Upload SGRUB preview package
+        uses: actions/upload-artifact@v4
+        with:
+          name: rtbm-sgrub-preview
+          path: |
+            dist/rtbm-sgrub.muxapp
+          if-no-files-found: error
+          retention-days: 30
       - name: Assert no write-capable profile
         run: |
           python3 - <<'PY'
