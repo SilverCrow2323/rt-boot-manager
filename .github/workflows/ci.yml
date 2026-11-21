@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   read-only-core:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,6 +25,10 @@ jobs:
           python-version: "3.11"
       - name: Install SDL2 development files
         run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+      - name: Assert native ARM64 build environment
+        run: |
+          test "$(uname -m)" = "aarch64"
+          case "$(cc -dumpmachine)" in aarch64*) ;; *) echo "Expected AArch64 compiler, got $(cc -dumpmachine)" >&2; exit 1 ;; esac
       - name: Validate generated SGRUB profiles
         run: python3 tools/generate_sgrub_profiles.py --check
       - name: Build native SGRUB frontend
