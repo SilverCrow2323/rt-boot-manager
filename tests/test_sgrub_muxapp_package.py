@@ -20,7 +20,11 @@ def make_package(path, readme=README):
     with zipfile.ZipFile(path, "w") as archive:
         for name, payload, mode in (
             ("RTBM-SGRUB/sgrub", b"\x7fELF" + b"\0" * 128, 0o100755),
-            ("RTBM-SGRUB/mux_launch.sh", b"#!/bin/sh\nexec ./sgrub\n", 0o100755),
+            (
+                "RTBM-SGRUB/mux_launch.sh",
+                b"#!/bin/sh\nSETUP_APP sgrub modern\nAPP_DIRECTORY=/mnt/SDCARD/MUOS/application/RTBM-SGRUB\n./$APP_BIN --fullscreen\n",
+                0o100755,
+            ),
             ("RTBM-SGRUB/README.txt", readme, 0o100644),
         ):
             info = zipfile.ZipInfo(name)
