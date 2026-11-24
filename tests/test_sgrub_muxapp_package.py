@@ -146,7 +146,7 @@ class SgrubPackageTests(unittest.TestCase):
     def test_rejects_incongruent_load_alignment(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "preview.muxapp"
-            make_package(path, binary=make_elf(segment_offset=1))
+            make_package(path, binary=make_elf(segment_offset=1, segment_file_size=1))
             with self.assertRaisesRegex(PackageError, "violate alignment"):
                 verify(str(path))
 
