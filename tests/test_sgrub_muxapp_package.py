@@ -6,7 +6,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from verify_sgrub_muxapp import ELF64_HEADER, PackageError, verify
+from verify_sgrub_muxapp import (
+    ELF64_HEADER,
+    ELF64_PROGRAM_HEADER,
+    PackageError,
+    verify,
+)
 
 
 README = (
@@ -16,14 +21,30 @@ README = (
 )
 
 
-def make_elf(machine=183, elf_class=2, endian=1, truncate_program_headers=False):
+def make_elf(
+    machine=183,
+    elf_class=2,
+    endian=1,
+    segment_type=1,
+    segment_offset=0,
+    segment_file_size=None,
+    segment_memory_size=None,
+):
     ident = b"\x7fELF" + bytes([elf_class, endian, 1, 0, 0]) + bytes(7)
+    payload_size = ELF64_HEADER.size + ELF64_PROGRAM_HEADER.size
+    if segment_file_size is None:
+        segment_file_size = payload_size
+    if segment_memory_size is None:
+        segment_memory_size = segment_file_size
     header = ELF64_HEADER.pack(
         ident, 3, machine, 1, 0x400000, ELF64_HEADER.size, 0, 0,
-        ELF64_HEADER.size, 56, 1, 64, 0, 0,
+        ELF64_HEADER.size, ELF64_PROGRAM_HEADER.size, 1, 64, 0, 0,
     )
-    payload = header + (b"\0" * 56)
-    return payload[:-8] if truncate_program_headers else payload
+    program_header = ELF64_PROGRAM_HEADER.pack(
+        segment_type, 5, segment_offset, 0x400000, 0x400000,
+        segment_file_size, segment_memory_size, 0x1000,
+    )
+    return header + program_header
 
 
 def make_package(path, readme=README, binary=None):
@@ -52,6 +73,7 @@ class SgrubPackageTests(unittest.TestCase):
             result = verify(str(path))
             self.assertEqual(result["members"], 3)
             self.assertEqual(result["architecture"], "AArch64")
+            self.assertEqual(result["load_segments"], 1)
             self.assertGreater(result["binary_bytes"], ELF64_HEADER.size)
 
     def test_rejects_x86_64_elf(self):
@@ -75,10 +97,31 @@ class SgrubPackageTests(unittest.TestCase):
             with self.assertRaisesRegex(PackageError, "little-endian"):
                 verify(str(path))
 
+    def test_rejects_no_loadable_segment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preview.muxapp"
+            make_package(path, binary=make_elf(segment_type=0))
+            with self.assertRaisesRegex(PackageError, "no loadable PT_LOAD"):
+                verify(str(path))
+
+    def test_rejects_load_segment_outside_binary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preview.muxapp"
+            make_package(path, binary=make_elf(segment_offset=4096, segment_file_size=16))
+            with self.assertRaisesRegex(PackageError, "extends beyond"):
+                verify(str(path))
+
+    def test_rejects_file_segment_larger_than_memory_segment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preview.muxapp"
+            make_package(path, binary=make_elf(segment_file_size=32, segment_memory_size=16))
+            with self.assertRaisesRegex(PackageError, "file size exceeds"):
+                verify(str(path))
+
     def test_rejects_truncated_program_headers(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "preview.muxapp"
-            make_package(path, binary=make_elf(truncate_program_headers=True))
+            make_package(path, binary=make_elf()[:-8])
             with self.assertRaisesRegex(PackageError, "program header"):
                 verify(str(path))
 

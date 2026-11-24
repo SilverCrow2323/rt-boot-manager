@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify an RTBM SGRUB .muxapp is safe and contains an ARM64 muOS executable."""
+"""Verify an RTBM SGRUB .muxapp is safe and contains a loadable ARM64 muOS executable."""
 
 from __future__ import annotations
 
@@ -24,10 +24,12 @@ SAFETY_TEXT = (
     b"NOT CONNECTED",
 )
 ELF64_HEADER = struct.Struct("<16sHHIQQQIHHHHHH")
+ELF64_PROGRAM_HEADER = struct.Struct("<IIQQQQQQ")
 ELFCLASS64 = 2
 ELFDATA2LSB = 1
 ET_EXEC = 2
 ET_DYN = 3
+PT_LOAD = 1
 EM_AARCH64 = 183
 
 
@@ -60,8 +62,30 @@ def verify_arm64_elf(data: bytes) -> Dict[str, int]:
         raise PackageError("invalid ELF64 header size")
     if entry == 0:
         raise PackageError("ELF entry point is zero")
-    if phnum == 0 or phentsize < 56 or phoff + phentsize * phnum > len(data):
+    if (
+        phnum == 0
+        or phoff < ehsize
+        or phentsize < ELF64_PROGRAM_HEADER.size
+        or phoff + phentsize * phnum > len(data)
+    ):
         raise PackageError("ELF64 program header table is missing or truncated")
+
+    load_segments = 0
+    for index in range(phnum):
+        offset = phoff + index * phentsize
+        p_type, _p_flags, p_offset, _p_vaddr, _p_paddr, p_filesz, p_memsz, _p_align = (
+            ELF64_PROGRAM_HEADER.unpack_from(data, offset)
+        )
+        if p_type != PT_LOAD:
+            continue
+        load_segments += 1
+        if p_filesz > p_memsz:
+            raise PackageError("ELF64 PT_LOAD file size exceeds its memory size")
+        if p_offset > len(data) or p_filesz > len(data) - p_offset:
+            raise PackageError("ELF64 PT_LOAD segment extends beyond the binary")
+
+    if load_segments == 0:
+        raise PackageError("ELF64 has no loadable PT_LOAD segment")
     if shnum and (shentsize < 64 or shoff + shentsize * shnum > len(data)):
         raise PackageError("ELF64 section header table is truncated")
 
@@ -70,6 +94,7 @@ def verify_arm64_elf(data: bytes) -> Dict[str, int]:
         "entry": entry,
         "machine": machine,
         "program_headers": phnum,
+        "load_segments": load_segments,
         "type": elf_type,
     }
 
@@ -136,6 +161,7 @@ def verify(path: str) -> Dict[str, object]:
         "launcher_bytes": len(launcher),
         "architecture": "AArch64",
         "elf_entry": elf["entry"],
+        "load_segments": elf["load_segments"],
     }
 
 
@@ -149,8 +175,8 @@ def main() -> int:
         print("SGRUB package verification: ERROR: %s" % exc, file=sys.stderr)
         return 1
     print(
-        "SGRUB package verification: OK (%d members; AArch64 ELF %d bytes; entry 0x%x; launcher %d bytes; preview-only safety notice present)"
-        % (result["members"], result["binary_bytes"], result["elf_entry"], result["launcher_bytes"])
+        "SGRUB package verification: OK (%d members; AArch64 ELF %d bytes; entry 0x%x; %d PT_LOAD segment(s); launcher %d bytes; preview-only safety notice present)"
+        % (result["members"], result["binary_bytes"], result["elf_entry"], result["load_segments"], result["launcher_bytes"])
     )
     return 0
 
