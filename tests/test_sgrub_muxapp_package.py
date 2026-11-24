@@ -29,6 +29,10 @@ def make_elf(
     segment_offset=0,
     segment_file_size=None,
     segment_memory_size=None,
+    entry=0x400000,
+    segment_vaddr=0x400000,
+    segment_flags=5,
+    segment_align=0x1000,
 ):
     ident = b"\x7fELF" + bytes([elf_class, endian, 1, 0, 0]) + bytes(7)
     payload_size = ELF64_HEADER.size + ELF64_PROGRAM_HEADER.size
@@ -37,12 +41,12 @@ def make_elf(
     if segment_memory_size is None:
         segment_memory_size = segment_file_size
     header = ELF64_HEADER.pack(
-        ident, 3, machine, 1, 0x400000, ELF64_HEADER.size, 0, 0,
+        ident, 3, machine, 1, entry, ELF64_HEADER.size, 0, 0,
         ELF64_HEADER.size, ELF64_PROGRAM_HEADER.size, 1, 64, 0, 0,
     )
     program_header = ELF64_PROGRAM_HEADER.pack(
-        segment_type, 5, segment_offset, 0x400000, 0x400000,
-        segment_file_size, segment_memory_size, 0x1000,
+        segment_type, segment_flags, segment_offset, segment_vaddr, segment_vaddr,
+        segment_file_size, segment_memory_size, segment_align,
     )
     return header + program_header
 
@@ -116,6 +120,34 @@ class SgrubPackageTests(unittest.TestCase):
             path = Path(directory) / "preview.muxapp"
             make_package(path, binary=make_elf(segment_file_size=32, segment_memory_size=16))
             with self.assertRaisesRegex(PackageError, "file size exceeds"):
+                verify(str(path))
+
+    def test_rejects_entrypoint_outside_executable_segment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preview.muxapp"
+            make_package(path, binary=make_elf(entry=0x500000))
+            with self.assertRaisesRegex(PackageError, "entry point is not inside"):
+                verify(str(path))
+
+    def test_rejects_non_executable_entry_segment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preview.muxapp"
+            make_package(path, binary=make_elf(segment_flags=4))
+            with self.assertRaisesRegex(PackageError, "entry point is not inside"):
+                verify(str(path))
+
+    def test_rejects_non_power_of_two_load_alignment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preview.muxapp"
+            make_package(path, binary=make_elf(segment_align=24))
+            with self.assertRaisesRegex(PackageError, "not a power of two"):
+                verify(str(path))
+
+    def test_rejects_incongruent_load_alignment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preview.muxapp"
+            make_package(path, binary=make_elf(segment_offset=1))
+            with self.assertRaisesRegex(PackageError, "violate alignment"):
                 verify(str(path))
 
     def test_rejects_truncated_program_headers(self):
