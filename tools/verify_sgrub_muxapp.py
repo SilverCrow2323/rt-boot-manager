@@ -30,7 +30,9 @@ ELFDATA2LSB = 1
 ET_EXEC = 2
 ET_DYN = 3
 PT_LOAD = 1
+PF_X = 1
 EM_AARCH64 = 183
+ELF64_MAX = (1 << 64) - 1
 
 
 class PackageError(ValueError):
@@ -71,9 +73,10 @@ def verify_arm64_elf(data: bytes) -> Dict[str, int]:
         raise PackageError("ELF64 program header table is missing or truncated")
 
     load_segments = 0
+    entry_in_executable_segment = False
     for index in range(phnum):
         offset = phoff + index * phentsize
-        p_type, _p_flags, p_offset, _p_vaddr, _p_paddr, p_filesz, p_memsz, _p_align = (
+        p_type, p_flags, p_offset, p_vaddr, _p_paddr, p_filesz, p_memsz, p_align = (
             ELF64_PROGRAM_HEADER.unpack_from(data, offset)
         )
         if p_type != PT_LOAD:
@@ -83,9 +86,20 @@ def verify_arm64_elf(data: bytes) -> Dict[str, int]:
             raise PackageError("ELF64 PT_LOAD file size exceeds its memory size")
         if p_offset > len(data) or p_filesz > len(data) - p_offset:
             raise PackageError("ELF64 PT_LOAD segment extends beyond the binary")
+        if p_vaddr > ELF64_MAX - p_memsz:
+            raise PackageError("ELF64 PT_LOAD memory range overflows the address space")
+        if p_align > 1:
+            if p_align & (p_align - 1):
+                raise PackageError("ELF64 PT_LOAD alignment is not a power of two")
+            if p_offset % p_align != p_vaddr % p_align:
+                raise PackageError("ELF64 PT_LOAD offset and virtual address violate alignment")
+        if p_flags & PF_X and p_vaddr <= entry < p_vaddr + p_memsz:
+            entry_in_executable_segment = True
 
     if load_segments == 0:
         raise PackageError("ELF64 has no loadable PT_LOAD segment")
+    if not entry_in_executable_segment:
+        raise PackageError("ELF entry point is not inside an executable PT_LOAD segment")
     if shnum and (shentsize < 64 or shoff + shentsize * shnum > len(data)):
         raise PackageError("ELF64 section header table is truncated")
 
