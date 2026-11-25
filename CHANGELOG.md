@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reject duplicate JSON object keys in release manifests and retained release-history indexes, including nested asset objects, instead of silently accepting the last value.
+- Added regression coverage for duplicate root and nested keys.
+
 - Hardened release-manifest validation for HTTPS source/asset URLs, embedded credentials, safe flat filenames, duplicate assets, ambiguous asset declarations, positive byte sizes and explicit checksum policies.
 - Applied the same URL/tag validation rules to retained release-history indexes.
 - Added regression tests for path traversal, URL downgrade/credentials, duplicate filenames, invalid sizes and legacy checksum-policy handling.
