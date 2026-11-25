@@ -62,4 +62,69 @@ class ReleaseManifestTests(unittest.TestCase):
         manifest = {"schema_version":1,"os_id":"example","tag":"1.0","channel":"stable","source":"https://example.com/release","device_family":"h700","device":"test-device","installation_model":"full_image","validation":{},"asset":{"filename":"image.img.gz","sha256":None}}
         with self.assertRaises(ReleaseCatalogError): validate_release_manifest(manifest)
 
+
+    def _valid_manifest(self):
+        return {
+            "schema_version": 1,
+            "os_id": "example-os",
+            "tag": "1.2.3",
+            "channel": "stable",
+            "source": "https://example.com/releases",
+            "device_family": "h700",
+            "device": "test-device",
+            "installation_model": "full_image",
+            "validation": {},
+            "asset": {"filename": "image.img.gz", "sha256": "a" * 64},
+        }
+
+    def test_asset_filename_cannot_escape_manifest_asset_scope(self):
+        for filename in ("../image.img.gz", "folder/image.img.gz", "folder" + chr(92) + "image.img.gz", "..", "bad" + chr(10) + "name"):
+            with self.subTest(filename=filename):
+                manifest = self._valid_manifest()
+                manifest["asset"]["filename"] = filename
+                with self.assertRaises(ReleaseCatalogError):
+                    validate_release_manifest(manifest)
+
+    def test_source_and_asset_urls_reject_downgrades_and_credentials(self):
+        for url in ("http://example.com/release", "https://user:pass@example.com/release", "https:///missing-host", "https://example.com:99999/release"):
+            with self.subTest(url=url):
+                manifest = self._valid_manifest()
+                manifest["source"] = url
+                with self.assertRaises(ReleaseCatalogError):
+                    validate_release_manifest(manifest)
+        manifest = self._valid_manifest()
+        manifest["asset"]["url"] = "http://example.com/image.img.gz"
+        with self.assertRaises(ReleaseCatalogError):
+            validate_release_manifest(manifest)
+
+    def test_asset_and_assets_cannot_be_ambiguous(self):
+        manifest = self._valid_manifest()
+        manifest["assets"] = [{"filename": "other.img.gz", "sha256": "b" * 64}]
+        with self.assertRaisesRegex(ReleaseCatalogError, "either asset or assets"):
+            validate_release_manifest(manifest)
+
+    def test_duplicate_asset_names_are_rejected_case_insensitively(self):
+        manifest = self._valid_manifest()
+        manifest.pop("asset")
+        manifest["assets"] = [
+            {"filename": "IMAGE.img.gz", "sha256": "a" * 64},
+            {"filename": "image.IMG.GZ", "sha256": "b" * 64},
+        ]
+        with self.assertRaisesRegex(ReleaseCatalogError, "duplicate asset filename"):
+            validate_release_manifest(manifest)
+
+    def test_size_bytes_must_be_a_positive_integer(self):
+        for size in (0, -1, True, "1024"):
+            with self.subTest(size=size):
+                manifest = self._valid_manifest()
+                manifest["asset"]["size_bytes"] = size
+                with self.assertRaises(ReleaseCatalogError):
+                    validate_release_manifest(manifest)
+
+    def test_valid_policy_without_published_digest_remains_supported(self):
+        manifest = self._valid_manifest()
+        manifest["asset"]["sha256"] = None
+        manifest["asset"]["sha256_policy"] = "calculate_on_download_and_store_local_verification"
+        self.assertEqual(validate_release_manifest(manifest)["os_id"], "example-os")
+
 if __name__ == "__main__": unittest.main()
