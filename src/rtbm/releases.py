@@ -62,18 +62,18 @@ def validate_release_manifest(data: Any, source: str = "<memory>") -> dict[str, 
     missing = sorted(required - data.keys())
     if missing:
         raise ReleaseCatalogError(f"{source}: missing fields: {', '.join(missing)}")
-    if data["schema_version"] != 1:
+    if isinstance(data["schema_version"], bool) or not isinstance(data["schema_version"], int) or data["schema_version"] != 1:
         raise ReleaseCatalogError(f"{source}: unsupported schema_version")
     if not isinstance(data["os_id"], str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,31}", data["os_id"]):
         raise ReleaseCatalogError(f"{source}: invalid os_id")
     _validate_release_tag(data["tag"], source, "release tag")
-    if data["channel"] not in {"stable", "legacy", "beta", "nightly"}:
+    if not isinstance(data["channel"], str) or data["channel"] not in {"stable", "legacy", "beta", "nightly"}:
         raise ReleaseCatalogError(f"{source}: invalid channel")
     _validate_https_url(data["source"], source, "source")
     for field in ("device_family", "device"):
         if not isinstance(data[field], str) or not data[field].strip():
             raise ReleaseCatalogError(f"{source}: invalid {field}")
-    if data["installation_model"] not in {"full_image", "delta_update", "rootfs_bundle", "manual"}:
+    if not isinstance(data["installation_model"], str) or data["installation_model"] not in {"full_image", "delta_update", "rootfs_bundle", "manual"}:
         raise ReleaseCatalogError(f"{source}: invalid installation_model")
     if not isinstance(data["validation"], dict):
         raise ReleaseCatalogError(f"{source}: validation block must be an object")
