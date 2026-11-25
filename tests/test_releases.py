@@ -6,9 +6,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from rtbm.releases import ReleaseCatalogError, load_release_history, load_release_manifests, validate_release_manifest
+from rtbm.releases import (DuplicateJSONKeyError, ReleaseCatalogError, _strict_json_loads, load_release_history, load_release_manifests, validate_release_manifest)
 
 class ReleaseManifestTests(unittest.TestCase):
+    def test_json_parser_rejects_duplicate_keys_at_every_object_depth(self):
+        for payload in (
+            '{"os_id":"rocknix","os_id":"knulli"}',
+            '{"asset":{"filename":"one.img","filename":"two.img"}}',
+        ):
+            with self.subTest(payload=payload):
+                with self.assertRaisesRegex(DuplicateJSONKeyError, "duplicate JSON key"):
+                    _strict_json_loads(payload)
+
     def test_release_catalog_loads_all_verified_and_legacy_manifests(self):
         releases = load_release_manifests(ROOT / "catalog" / "releases")
         expected = {
