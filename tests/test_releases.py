@@ -127,4 +127,21 @@ class ReleaseManifestTests(unittest.TestCase):
         manifest["asset"]["sha256_policy"] = "calculate_on_download_and_store_local_verification"
         self.assertEqual(validate_release_manifest(manifest)["os_id"], "example-os")
 
+
+    def test_schema_version_rejects_boolean_and_wrong_type(self):
+        for value in (True, "1", 2):
+            with self.subTest(value=value):
+                manifest = self._valid_manifest()
+                manifest["schema_version"] = value
+                with self.assertRaises(ReleaseCatalogError):
+                    validate_release_manifest(manifest)
+
+    def test_channel_and_installation_model_require_strings(self):
+        for field, value in (("channel", []), ("installation_model", {})):
+            with self.subTest(field=field):
+                manifest = self._valid_manifest()
+                manifest[field] = value
+                with self.assertRaises(ReleaseCatalogError):
+                    validate_release_manifest(manifest)
+
 if __name__ == "__main__": unittest.main()
