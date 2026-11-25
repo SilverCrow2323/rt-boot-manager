@@ -43,3 +43,10 @@ Scarab and the older Gladiator/Firefly releases use a KNULLI-specific BSP boot s
 - KNULLI current releases: https://github.com/knulli-cfw/knulli-linux/releases
 - KNULLI legacy releases: https://github.com/knulli-cfw/distribution/releases
 - KNULLI H700 firmware extraction: https://knulli.org/guides/firmware-extraction/h700-firmware-extract/
+
+
+## Manifest validation boundary
+
+The host validator treats release metadata as untrusted input. It requires HTTPS source and optional asset URLs without embedded credentials, rejects path components and case-insensitive duplicate asset filenames, rejects conflicting singular/plural asset declarations, and validates any declared byte size and SHA-256. A release without a published digest remains catalogued only when it carries an explicit non-empty local-verification policy.
+
+These checks do not authenticate the upstream publisher, resolve external download providers, verify an image's contents, or establish hardware compatibility. A manifest is still a research/selection record, not permission to flash a device.
