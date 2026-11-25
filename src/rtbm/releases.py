@@ -15,6 +15,24 @@ class ReleaseCatalogError(ValueError):
     """An OS release manifest is invalid."""
 
 
+class DuplicateJSONKeyError(ValueError):
+    """A JSON object contains the same key more than once."""
+
+
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise DuplicateJSONKeyError(f"duplicate JSON key {key!r}")
+        result[key] = value
+    return result
+
+
+def _strict_json_loads(text: str) -> Any:
+    """Parse JSON without accepting ambiguous duplicate keys at any depth."""
+    return json.loads(text, object_pairs_hook=_unique_object)
+
+
 def default_release_dir() -> Path:
     return Path(__file__).resolve().parents[2] / "catalog" / "releases"
 
@@ -130,8 +148,8 @@ def load_release_history(history_dir: Path | None = None) -> list[dict[str, Any]
     seen: set[str] = set()
     for path in sorted(directory.rglob("*.json")):
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
+            data = _strict_json_loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, DuplicateJSONKeyError) as exc:
             raise ReleaseCatalogError(f"{path}: cannot read history JSON: {exc}") from exc
         if not isinstance(data, dict) or data.get("schema_version") != 1:
             raise ReleaseCatalogError(f"{path}: invalid release history schema")
@@ -174,8 +192,8 @@ def load_release_manifests(release_dir: Path | None = None) -> list[dict[str, An
     seen: set[tuple[str, str]] = set()
     for path in sorted(directory.rglob("*.json")):
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
+            data = _strict_json_loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, DuplicateJSONKeyError) as exc:
             raise ReleaseCatalogError(f"{path}: cannot read JSON: {exc}") from exc
         manifest = validate_release_manifest(data, str(path.relative_to(directory)))
         key = (manifest["os_id"], manifest["tag"])
