@@ -62,4 +62,34 @@ class ReleaseManifestTests(unittest.TestCase):
         manifest = {"schema_version":1,"os_id":"example","tag":"1.0","channel":"stable","source":"https://example.com/release","device_family":"h700","device":"test-device","installation_model":"full_image","validation":{},"asset":{"filename":"image.img.gz","sha256":None}}
         with self.assertRaises(ReleaseCatalogError): validate_release_manifest(manifest)
 
+    def _minimal_manifest(self):
+        return {"schema_version":1,"os_id":"example","tag":"1.0","channel":"stable",
+                "source":"https://example.com/releases/1.0","device_family":"h700",
+                "device":"test-device","installation_model":"full_image","validation":{},
+                "asset":{"filename":"image.img.gz","sha256":"a"*64}}
+
+    def test_release_source_rejects_credentials_and_missing_host(self):
+        for source in ("https://user:pass@example.com/release", "https:///release", "http://example.com/release"):
+            manifest = self._minimal_manifest()
+            manifest["source"] = source
+            with self.subTest(source=source), self.assertRaises(ReleaseCatalogError):
+                validate_release_manifest(manifest)
+
+    def test_asset_filename_cannot_escape_staging_directory(self):
+        for filename in ("../boot0.bin", "..\\boot0.bin", "/tmp/image.img", ".", ".."):
+            manifest = self._minimal_manifest()
+            manifest["asset"]["filename"] = filename
+            with self.subTest(filename=filename), self.assertRaises(ReleaseCatalogError):
+                validate_release_manifest(manifest)
+
+    def test_duplicate_asset_filenames_are_rejected(self):
+        manifest = self._minimal_manifest()
+        manifest.pop("asset")
+        manifest["assets"] = [
+            {"filename":"image.img.gz","sha256":"a"*64},
+            {"filename":"image.img.gz","sha256":"b"*64},
+        ]
+        with self.assertRaises(ReleaseCatalogError):
+            validate_release_manifest(manifest)
+
 if __name__ == "__main__": unittest.main()

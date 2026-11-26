@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -33,8 +34,12 @@ def validate_release_manifest(data: Any, source: str = "<memory>") -> dict[str, 
         raise ReleaseCatalogError(f"{source}: invalid tag")
     if data["channel"] not in {"stable", "legacy", "beta", "nightly"}:
         raise ReleaseCatalogError(f"{source}: invalid channel")
-    if not isinstance(data["source"], str) or not data["source"].startswith("https://"):
+    if not isinstance(data["source"], str):
         raise ReleaseCatalogError(f"{source}: source must be HTTPS")
+    parsed_source = urlparse(data["source"])
+    if (parsed_source.scheme != "https" or not parsed_source.hostname or
+            parsed_source.username is not None or parsed_source.password is not None):
+        raise ReleaseCatalogError(f"{source}: source must be a credential-free HTTPS URL")
     if data["installation_model"] not in {"full_image", "delta_update", "rootfs_bundle", "manual"}:
         raise ReleaseCatalogError(f"{source}: invalid installation_model")
     if not isinstance(data["validation"], dict):
@@ -47,9 +52,15 @@ def validate_release_manifest(data: Any, source: str = "<memory>") -> dict[str, 
     asset_list = assets if assets is not None else [asset]
     if not isinstance(asset_list, list) or not asset_list:
         raise ReleaseCatalogError(f"{source}: assets must be a non-empty list")
+    seen_filenames: set[str] = set()
     for entry in asset_list:
         if not isinstance(entry, dict) or not isinstance(entry.get("filename"), str) or not entry["filename"]:
             raise ReleaseCatalogError(f"{source}: every asset needs a filename")
+        filename = entry["filename"]
+        if (filename in {".", ".."} or "/" in filename or "\\" in filename or
+                "\\x00" in filename or filename in seen_filenames):
+            raise ReleaseCatalogError(f"{source}: unsafe or duplicate asset filename")
+        seen_filenames.add(filename)
         digest = entry.get("sha256")
         if digest is not None and (not isinstance(digest, str) or not SHA256.fullmatch(digest)):
             raise ReleaseCatalogError(f"{source}: invalid SHA-256 for {entry['filename']}")
