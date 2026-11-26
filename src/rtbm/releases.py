@@ -58,7 +58,7 @@ def validate_release_manifest(data: Any, source: str = "<memory>") -> dict[str, 
             raise ReleaseCatalogError(f"{source}: every asset needs a filename")
         filename = entry["filename"]
         if (filename in {".", ".."} or "/" in filename or "\\" in filename or
-                "\\x00" in filename or filename in seen_filenames):
+                "\x00" in filename or filename in seen_filenames):
             raise ReleaseCatalogError(f"{source}: unsafe or duplicate asset filename")
         seen_filenames.add(filename)
         digest = entry.get("sha256")
