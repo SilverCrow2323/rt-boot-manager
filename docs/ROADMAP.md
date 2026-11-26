@@ -27,6 +27,7 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Generate one native release table from stable manifests and separate history indexes.
 - [ ] Resolve and verify exact muOS archive downloads for RG35XX H.
 - [ ] Verify KNULLI legacy checksum sidecars against downloaded images.
+- [x] Add read-only local image verification against pinned manifest filename, size and SHA-256; fail closed when checksums are not verified.
 - [ ] Build upstream release resolver with signed-source / asset / checksum verification.
 - [ ] Probe RG35XX H RAM variant and panel/PCB revision on physical hardware.
 
