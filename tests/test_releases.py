@@ -106,6 +106,21 @@ class ReleaseManifestTests(unittest.TestCase):
         with self.assertRaises(ReleaseCatalogError):
             validate_release_manifest(manifest)
 
+    def test_https_urls_reject_invalid_dns_hostnames_and_fragments(self):
+        for url in (
+            "https://bad_host.example/release",
+            "https://example..com/release",
+            "https://-bad.example/release",
+            "https://example.com./release",
+            "https://example.com/release#fragment",
+            "https://example.com\\\\evil.test/release",
+        ):
+            with self.subTest(url=url):
+                manifest = self._valid_manifest()
+                manifest["source"] = url
+                with self.assertRaises(ReleaseCatalogError):
+                    validate_release_manifest(manifest)
+
     def test_asset_and_assets_cannot_be_ambiguous(self):
         manifest = self._valid_manifest()
         manifest["assets"] = [{"filename": "other.img.gz", "sha256": "b" * 64}]

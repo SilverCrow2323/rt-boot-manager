@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import ipaddress
 from urllib.parse import urlsplit
 from pathlib import Path
 from typing import Any
@@ -50,8 +51,25 @@ def _validate_https_url(value: Any, source: str, label: str) -> None:
         or not parsed.hostname
         or parsed.username is not None
         or parsed.password is not None
+        or parsed.fragment
+        or any(ch.isspace() or ch == chr(92) for ch in value)
     ):
-        raise ReleaseCatalogError(f"{source}: {label} must use HTTPS without embedded credentials")
+        raise ReleaseCatalogError(f"{source}: {label} must use HTTPS without credentials, fragments or unsafe characters")
+    hostname = parsed.hostname.rstrip(".")
+    try:
+        ipaddress.ip_address(hostname)
+    except ValueError:
+        try:
+            ascii_host = hostname.encode("idna").decode("ascii")
+        except UnicodeError as exc:
+            raise ReleaseCatalogError(f"{source}: invalid hostname in {label}") from exc
+        labels = ascii_host.split(".")
+        if (
+            len(labels) < 2
+            or any(not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", part)
+                   for part in labels)
+        ):
+            raise ReleaseCatalogError(f"{source}: invalid hostname in {label}")
 
 
 def _validate_release_tag(value: Any, source: str, label: str) -> None:
