@@ -55,7 +55,7 @@ def _validate_https_url(value: Any, source: str, label: str) -> None:
         or any(ch.isspace() or ch == chr(92) for ch in value)
     ):
         raise ReleaseCatalogError(f"{source}: {label} must use HTTPS without credentials, fragments or unsafe characters")
-    hostname = parsed.hostname.rstrip(".")
+    hostname = parsed.hostname
     try:
         ipaddress.ip_address(hostname)
     except ValueError:
