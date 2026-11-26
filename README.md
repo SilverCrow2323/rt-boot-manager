@@ -84,7 +84,7 @@ python3 tools/rtbm.py probe
 python3 tools/rtbm.py validate
 python3 tools/rtbm.py releases
 python3 tools/rtbm.py releases --os rocknix
-python3 tools/rtbm.py verify-asset rocknix 20261101 ./rocknix-image.img.gz
+python3 tools/rtbm.py verify-asset rocknix 20261101 ./ROCKNIX-H700.aarch64-20261101-DDR4.img.gz
 python3 tools/rtbm.py plan rocknix --device rg35xx-h --ram unknown --dry-run
 ```
 
