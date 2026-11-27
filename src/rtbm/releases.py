@@ -57,7 +57,7 @@ def _validate_https_url(value: Any, source: str, label: str) -> None:
         raise ReleaseCatalogError(f"{source}: {label} must use HTTPS without credentials, fragments or unsafe characters")
     hostname = parsed.hostname
     try:
-        ipaddress.ip_address(hostname)
+        address = ipaddress.ip_address(hostname)
     except ValueError:
         try:
             ascii_host = hostname.encode("idna").decode("ascii")
@@ -70,6 +70,9 @@ def _validate_https_url(value: Any, source: str, label: str) -> None:
                    for part in labels)
         ):
             raise ReleaseCatalogError(f"{source}: invalid hostname in {label}")
+    else:
+        if not address.is_global:
+            raise ReleaseCatalogError(f"{source}: {label} must not target a non-public IP address")
 
 
 def _validate_release_tag(value: Any, source: str, label: str) -> None:
