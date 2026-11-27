@@ -168,4 +168,25 @@ class ReleaseManifestTests(unittest.TestCase):
                 with self.assertRaises(ReleaseCatalogError):
                     validate_release_manifest(manifest)
 
+    def test_https_urls_reject_non_public_ip_literals(self):
+        for url in (
+            "https://127.0.0.1/release",
+            "https://10.0.0.1/release",
+            "https://192.168.1.10/release",
+            "https://169.254.169.254/latest",
+            "https://[::1]/release",
+            "https://[fe80::1]/release",
+            "https://0.0.0.0/release",
+        ):
+            with self.subTest(url=url):
+                manifest = self._valid_manifest()
+                manifest["source"] = url
+                with self.assertRaisesRegex(ReleaseCatalogError, "non-public IP"):
+                    validate_release_manifest(manifest)
+
+    def test_https_urls_allow_public_ip_literals(self):
+        manifest = self._valid_manifest()
+        manifest["source"] = "https://8.8.8.8/releases"
+        self.assertEqual(validate_release_manifest(manifest)["os_id"], "example-os")
+
 if __name__ == "__main__": unittest.main()
