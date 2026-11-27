@@ -21,6 +21,7 @@ This roadmap distinguishes implemented host-side foundations from unvalidated de
 - [x] Add ROCKNIX 20261101 DDR3/DDR4 manifests, SHA-256 and DTB mapping.
 - [x] Add KNULLI Scarab 20260511 H700 image manifest.
 - [x] Add release-manifest validation.
+- [x] Validate catalogue endpoint DNS hostnames with IDNA/label rules and reject non-global IP-literal hosts, URL fragments, whitespace and unsafe separators; cover IPv4/IPv6 and malformed-host cases.
 - [x] Retain five earlier ROCKNIX H700 releases with release-specific asset checksums.
 - [x] Retain four legacy KNULLI RG35XX H release records with explicit checksum-verification requirements.
 - [x] Index the 15 archived muOS releases without inventing provider URLs, image filenames or checksums.
@@ -97,3 +98,11 @@ A profile may be marked **validated** only after:
 5. return to the known-good system is verified.
 
 Native multiboot remains experimental until the relevant release gates are complete.
+
+## M1.1 — Release endpoint host validation evidence
+
+The release catalogue validator now treats source and asset endpoint hostnames as untrusted input. It accepts syntactically valid public DNS names and public IP literals, rejects malformed DNS labels and non-global IP literals, and keeps HTTPS-only, credential, fragment and unsafe-character checks. Regression cases cover IPv4/IPv6 and malformed host input.
+
+[Read-only core CI run #45972305353](https://github.com/SilverCrow2323/rt-boot-manager/actions/runs/45972305353) passed profile validation, native SGRUB frontend build, OS catalogue validation, unit tests, CLI checks, muOS launcher/packaging syntax and the assertion that no profile enables write-capable boot operations.
+
+This is metadata validation and read-only build evidence. It does not authenticate upstream publishers, download/inspect firmware payloads, validate a boot adapter or qualify recovery on physical H700 hardware.
