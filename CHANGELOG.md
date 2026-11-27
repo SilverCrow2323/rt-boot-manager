@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject loopback, private, link-local, reserved and otherwise non-global IP-literal catalogue endpoints while retaining valid public IP endpoints; added IPv4/IPv6 regression cases.
+
 - Reject duplicate JSON object keys in release manifests and retained release-history indexes, including nested asset objects, instead of silently accepting the last value.
 - Added regression coverage for duplicate root and nested keys.
 
