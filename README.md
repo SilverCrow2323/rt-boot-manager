@@ -73,6 +73,10 @@ workflow are documented in [SGRUB UI](docs/SGRUB_UI.md). It is a preview only:
 the boot hand-off is intentionally disconnected until the relevant adapter and
 hardware recovery path have been validated.
 
+## Release catalogue integrity
+
+The release validator rejects ambiguous `asset`/`assets` declarations, duplicate or path-bearing asset filenames, credential-bearing/non-HTTPS source and asset URLs, malformed DNS hostnames and URL fragments, malformed checksums, and invalid declared sizes. Historical provider indexes remain separate from installable manifests; a missing digest is accepted only with an explicit local-verification policy. This validates metadata only: it does not download or flash firmware.
+
 ## Read-only CLI
 
 The initial CLI is deliberately non-destructive. The release browser and CLI
